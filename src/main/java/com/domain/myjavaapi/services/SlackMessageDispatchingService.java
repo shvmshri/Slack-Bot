@@ -15,15 +15,18 @@ public class SlackMessageDispatchingService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SlackMessageDispatchingService.class);
 
     public void slackSendMsg(String userId, String message) {
+
         MethodsClient client = Slack.getInstance().methods();
         try {
             client.chatPostMessage((r -> r.token(SlackMessageConstants.SLACK_BOT_TOKEN).channel(userId).text(message)));
         } catch (Exception e) {
             LOGGER.error("Exception occurred while sending message to Slack user.",e);
         }
+
     }
 
     public void slackSendMsg( List<String> userIDList, String message){
+
         try{
             for (String userID : userIDList) {
                 slackSendMsg(userID,message);

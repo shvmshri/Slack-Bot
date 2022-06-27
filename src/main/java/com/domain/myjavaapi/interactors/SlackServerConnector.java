@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 public class SlackServerConnector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SlackServerConnector.class);
-
     public static void main(String[] args){
 
         ApplicationContext ctx = new AnnotationConfigApplicationContext("com.domain.myjavaapi");

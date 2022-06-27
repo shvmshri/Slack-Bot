@@ -18,10 +18,12 @@ public class NotifyWatchersAPI extends Application {
     @POST
     @Consumes(MediaType.APPLICATION_JSON)
     public Response JenkinsHandler(JenkinsJobInfo jobDetails) {
+
         ApplicationContext ctx =  new AnnotationConfigApplicationContext("com.domain.myjavaapi");
         WatcherSlackService watcherSlackService = ctx.getBean(WatcherSlackService.class);
         watcherSlackService.handleNotifyUsers(jobDetails);
         return Response.ok().entity("Thanks! We received your data").build();
+
     }
 
 }

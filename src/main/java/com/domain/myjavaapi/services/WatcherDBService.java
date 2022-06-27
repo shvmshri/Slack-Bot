@@ -25,12 +25,15 @@ public class WatcherDBService {
     private MongoTemplateFactory templateFactory;
 
     public ArrayList<String> searchWatcherUserIds(JenkinsJobInfo job) throws Exception {
+
         Criteria criteria = new Criteria();
         criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(job.getChartName()), Criteria.where(Watcher.RELEASENAME).is(job.getReleaseName()));
 
         Query query = new Query(criteria);
         query.fields().include(Watcher.USERID);
-        MongoTemplate mongoTemplate = templateFactory.ApplicationMongoTemplate();
+
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+
         List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, "Watcher");
         ArrayList<String> userIds = new ArrayList<String>();
         for (Watcher watcher : watcherList) {
@@ -49,9 +52,12 @@ public class WatcherDBService {
         criteria = criteria.and(Watcher.USERID).is(watcher.getUserId());
 
         Query query = new Query(criteria);
-        MongoTemplate mongoTemplate = templateFactory.ApplicationMongoTemplate();
+
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+
         FindAndReplaceOptions options = new FindAndReplaceOptions().upsert().returnNew();
         mongoTemplate.findAndReplace(query, watcher, options, Watcher.class, "Watcher");
+
     }
 
     public boolean removeWatcherInfo(String chart, String release, String userId) throws Exception {
@@ -60,24 +66,28 @@ public class WatcherDBService {
         criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
         criteria = criteria.and(Watcher.USERID).is(userId);
 
-        MongoTemplate mongoTemplate = templateFactory.ApplicationMongoTemplate();
         Query query = new Query(criteria);
-        DeleteResult result = mongoTemplate.remove(query, Watcher.class, "Watcher");
 
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+
+        DeleteResult result = mongoTemplate.remove(query, Watcher.class, "Watcher");
         if (result.getDeletedCount() == 0) {
             return false;
         }
         return true;
+
     }
 
     //When someone Asks for number of watchers
     public List<Watcher> UsersListInfo(String chart, String release, String userId) throws Exception {
+
         Criteria criteria = new Criteria();
         criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
 
         Query query = new Query(criteria);
         query.fields().include(Watcher.USEREMAIL);
-        MongoTemplate mongoTemplate = templateFactory.ApplicationMongoTemplate();
+
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
 
         List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, "Watcher");
         return watcherList;

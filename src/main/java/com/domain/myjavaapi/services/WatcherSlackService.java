@@ -5,23 +5,24 @@ import com.domain.myjavaapi.models.Watcher;
 import com.domain.myjavaapi.utility.SlackMessageConstants;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 
 @Service
 public class WatcherSlackService {
-      private static final Logger LOGGER = LoggerFactory.getLogger(WatcherSlackService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WatcherSlackService.class);
+    @Autowired
+    private WatcherDBService watcherDBService;
+    @Autowired
+    SlackMessageDispatchingService slackMessageDispatchingService;
 
-     @Autowired
-     private WatcherDBService watcherDBService;
-     @Autowired
-     SlackMessageDispatchingService slackMessageDispatchingService;
-
-    public void handleWatchCommand(String commandArg, String userId, String userEmail){
+    public void handleWatchCommand(String commandArg, String userId, String userEmail) {
 
         StringTokenizer tokens = new StringTokenizer(commandArg);
         String chart = tokens.nextToken();
@@ -29,15 +30,16 @@ public class WatcherSlackService {
         String time = tokens.nextToken();
 
         try {
-           watcherDBService.addWatcherInfo(chart, release, time, userId, userEmail);
-           slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.SUCCESS_WATCH);
-        } catch (Exception e){
-            slackMessageDispatchingService.slackSendMsg(userId,SlackMessageConstants.FAILURE);
-            LOGGER.error("Error occurred in database server while inserting watcher information.",e);
+            watcherDBService.addWatcherInfo(chart, release, time, userId, userEmail);
+            slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.SUCCESS_WATCH);
+        } catch (Exception e) {
+            slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.FAILURE);
+            LOGGER.error("Error occurred in database server while inserting watcher information.", e);
         }
+
     }
 
-    public void handleUnwatchCommand(String commandArg, String userId){
+    public void handleUnwatchCommand(String commandArg, String userId) {
 
         StringTokenizer tokens = new StringTokenizer(commandArg);
         String chart = tokens.nextToken();
@@ -45,20 +47,19 @@ public class WatcherSlackService {
 
         try {
             Boolean flag = watcherDBService.removeWatcherInfo(chart, release, userId);
-            if(flag){
-                slackMessageDispatchingService.slackSendMsg(userId,SlackMessageConstants.SUCCESS_UNWATCH);
+            if (flag) {
+                slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.SUCCESS_UNWATCH);
+            } else {
+                slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.NOT_A_WATCHER);
             }
-            else{
-                slackMessageDispatchingService.slackSendMsg(userId,SlackMessageConstants.NOT_A_WATCHER);
-            }
+        } catch (Exception e) {
+            slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.FAILURE);
+            LOGGER.error("Error occurred in database server while deleting watcher information.", e);
         }
-        catch (Exception e){
-            slackMessageDispatchingService.slackSendMsg(userId,SlackMessageConstants.FAILURE);
-            LOGGER.error("Error occurred in database server while deleting watcher information.",e);
-        }
+
     }
 
-    public void handleWatcherListCommand(String commandArg, String userId){
+    public void handleWatcherListCommand(String commandArg, String userId) {
 
         StringTokenizer tokens = new StringTokenizer(commandArg);
         String chart = tokens.nextToken();
@@ -73,19 +74,20 @@ public class WatcherSlackService {
             }
 
             String message = SlackMessageConstants.WATCHERS_LIST;
-            for(String userEmail : userEmails){
+            for (String userEmail : userEmails) {
                 message = message + ", " + userEmail;
             }
-            if(userEmails.isEmpty()) message = SlackMessageConstants.NO_WATCHERS;
+            if (userEmails.isEmpty()) message = SlackMessageConstants.NO_WATCHERS;
             slackMessageDispatchingService.slackSendMsg(userId, message);
-        } catch(Exception e){
-            slackMessageDispatchingService.slackSendMsg(userId,SlackMessageConstants.FAILURE);
-            LOGGER.error("Error occurred in database server while fetching watcher information.",e);
+        } catch (Exception e) {
+            slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.FAILURE);
+            LOGGER.error("Error occurred in database server while fetching watcher information.", e);
         }
 
     }
 
-    public void handleNotifyUsers(JenkinsJobInfo job){
+    public void handleNotifyUsers(JenkinsJobInfo job) {
+
         String chart = job.getChartName();
         String release = job.getReleaseName();
         String userStartingBuild = job.getUserEmail();
@@ -94,8 +96,8 @@ public class WatcherSlackService {
         try {
             List<String> userIDList = watcherDBService.searchWatcherUserIds(job);
             slackMessageDispatchingService.slackSendMsg(userIDList, message);
-        } catch(Exception e){
-            LOGGER.error("Error occurred in database server while fetching watcher information to send notification about the build",e);
+        } catch (Exception e) {
+            LOGGER.error("Error occurred in database server while fetching watcher information to send notification about the build", e);
         }
 
     }
