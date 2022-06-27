@@ -17,7 +17,7 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MongoTemplateFactory {
 
     private ConcurrentHashMap<String, MongoTemplate> mappingMongoTemplate = new ConcurrentHashMap<String, MongoTemplate>();
-    private String globalMongoURI = System.getenv("GLOBAL_MONGO_URI");
+//    private String globalMongoURI = System.getenv("GLOBAL_MONGO_URI");
     private String globalCollection = System.getenv("GLOBAL_COLLECTION");
     private String globalDatabase = System.getenv("GLOBAL_DATABASE");
 
