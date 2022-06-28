@@ -19,9 +19,15 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MongoTemplateFactory {
 
     private ConcurrentHashMap<String, MongoTemplate> mongoTemplateMappings = new ConcurrentHashMap<String, MongoTemplate>();
-    private String globalMongoURI = System.getenv("GLOBAL_MONGO_URI");
-    private String globalCollection = System.getenv("GLOBAL_COLLECTION");
-    private String globalDatabase = System.getenv("GLOBAL_DATABASE");
+    private static String globalMongoURI = "mongodb+srv://shvmshri:gaurisis@sandbox.zr9k6.mongodb.net/GlobalServers?retryWrites=true&w=majority";
+    private static String globalCollection = "Servers";
+    private static String globalDatabase = "GlobalServers";
+    private static String SERVER_CATEGORY = "serverCategory";
+    private static String SERVER_CATEGORY_VALUE = "MONGO";
+    private static String SERVER_TYPE = "serverType";
+    private static String SERVER_TYPE_VALUE = "SHARED_LINKS";
+    private static String APPLICATION_COLLECTION = "Watcher";
+
 
     private MongoClient mongo(String uri) {
 
@@ -42,7 +48,7 @@ public class MongoTemplateFactory {
     private Global getApplicationInfo(MongoTemplate globalMongoTemplate) {
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where("serverCategory").is("MONGO"), Criteria.where("serverType").is("SHARED_LINKS"));
+        criteria.andOperator(Criteria.where(SERVER_CATEGORY).is(SERVER_CATEGORY_VALUE), Criteria.where(SERVER_TYPE).is(SERVER_TYPE_VALUE));
         Query query = new Query(criteria);
         Global global = globalMongoTemplate.findOne(query, Global.class, globalCollection);
         return global;
@@ -54,7 +60,7 @@ public class MongoTemplateFactory {
         MongoTemplate globalMongoTemplate = getGlobalMongoTemplate();
         Global globalInfo = getApplicationInfo(globalMongoTemplate);
         MongoTemplate applicationMongoTemplate = mongoTemplate(globalInfo.getUrl(), globalInfo.getDbName());
-        applicationMongoTemplate.indexOps("Watcher").ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
+        applicationMongoTemplate.indexOps(APPLICATION_COLLECTION).ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
         return applicationMongoTemplate;
 
     }

@@ -20,19 +20,19 @@ public class SlackMessageDispatchingService {
         try {
             client.chatPostMessage((r -> r.token(SlackMessageConstants.SLACK_BOT_TOKEN).channel(userId).text(message)));
         } catch (Exception e) {
-            LOGGER.error("Exception occurred while sending message to Slack user.",e);
+            LOGGER.error("Exception occurred while sending message to Slack user.", e);
         }
 
     }
 
-    public void slackSendMsg( List<String> userIDList, String message){
+    public void slackSendMsg(List<String> userIDList, String message) {
 
-        try{
+        try {
             for (String userID : userIDList) {
-                slackSendMsg(userID,message);
+                slackSendMsg(userID, message);
             }
-        } catch (Exception e){
-            LOGGER.error("Error occurred while sending notification about the build to Watchers through Slack",e);
+        } catch (Exception e) {
+            LOGGER.error("Error occurred while sending notification about the build to Watchers through Slack", e);
         }
 
     }

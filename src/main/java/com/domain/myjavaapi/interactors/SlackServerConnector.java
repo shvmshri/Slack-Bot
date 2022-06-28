@@ -13,7 +13,8 @@ import org.springframework.stereotype.Service;
 public class SlackServerConnector {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SlackServerConnector.class);
-    public static void main(String[] args){
+
+    public static void main(String[] args) {
 
         ApplicationContext ctx = new AnnotationConfigApplicationContext("com.domain.myjavaapi");
         CommandHandler slackCommandHandler = ctx.getBean(CommandHandler.class);
@@ -23,7 +24,7 @@ public class SlackServerConnector {
         try {
             server.start();   // http://localhost:3000/slack/events
         } catch (Exception ex) {
-            LOGGER.error("[SlackAPI_CRITICAL] Exception while starting the server for Slack App",ex);
+            LOGGER.error("[SlackAPI_CRITICAL] Exception while starting the server for Slack App", ex);
         }
 
     }

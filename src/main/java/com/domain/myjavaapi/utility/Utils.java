@@ -6,7 +6,7 @@ import java.util.StringTokenizer;
 
 public class Utils {
 
-    public static int numArgCheck(String text){
+    public static int numArgCheck(String text) {
         if (text == null || text.isEmpty()) {
             return 0;
         }
@@ -14,15 +14,15 @@ public class Utils {
         return tokens.countTokens();
 
     }
-    public static Date findExpireDate(String time){
+
+    public static Date findExpireDate(String time) {
 
         int timeInt = 0;
-        char last = time.charAt(time.length()-1);
+        char last = time.charAt(time.length() - 1);
         time = time.substring(0, time.length() - 1);
-        if(time.length()>0) {
+        if (time.length() > 0) {
             timeInt = Integer.parseInt(time);
-        }
-        else{
+        } else {
             return new Date();
         }
 
@@ -30,11 +30,11 @@ public class Utils {
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
 
-       if(last == 'h' || last == 'H'){
-           calendar.add(Calendar.HOUR_OF_DAY, timeInt);
-       } else{
-           calendar.add(Calendar.MINUTE, timeInt);
-       }
+        if (last == 'h' || last == 'H') {
+            calendar.add(Calendar.HOUR_OF_DAY, timeInt);
+        } else {
+            calendar.add(Calendar.MINUTE, timeInt);
+        }
 
         return calendar.getTime();
     }
