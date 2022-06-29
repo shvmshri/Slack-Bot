@@ -1,4 +1,4 @@
-package com.domain.myjavaapi.config;
+package com.domain.myjavaapi.enums;
 
 public enum ServerType {
     GLOBAL,

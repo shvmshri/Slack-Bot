@@ -1,12 +1,10 @@
 package com.domain.myjavaapi.utility;
 
-import com.domain.myjavaapi.services.SlackCommandService;
 import com.slack.api.Slack;
 import com.slack.api.methods.MethodsClient;
 import com.slack.api.methods.response.users.UsersLookupByEmailResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.stereotype.Service;
 
 public class SlackUtil {
 

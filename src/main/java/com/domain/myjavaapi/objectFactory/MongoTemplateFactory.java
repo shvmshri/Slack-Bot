@@ -1,5 +1,6 @@
-package com.domain.myjavaapi.config;
+package com.domain.myjavaapi.objectFactory;
 
+import com.domain.myjavaapi.enums.ServerType;
 import com.domain.myjavaapi.models.MongoServerInfo;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
@@ -7,7 +8,6 @@ import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
-
 import org.springframework.data.mongodb.core.index.Index;
 import org.springframework.data.mongodb.core.query.Criteria;
 import org.springframework.data.mongodb.core.query.Query;
@@ -18,16 +18,16 @@ import java.util.concurrent.ConcurrentHashMap;
 @Service
 public class MongoTemplateFactory {
 
-    private ConcurrentHashMap<String, MongoTemplate> mongoTemplateMappings = new ConcurrentHashMap<String, MongoTemplate>();
-    private static String GLOBAL_MONGO_URI = "mongodb+srv://shvmshri:gaurisis@sandbox.zr9k6.mongodb.net/GlobalServers?retryWrites=true&w=majority";
-    private static String GLOBAL_COLLECTION = "Servers";
-    private static String GLOBAL_DATABASE = "GlobalServers";
-    private static String SERVER_CATEGORY = "serverCategory";
-    private static String SERVER_CATEGORY_VALUE = "MONGO";
-    private static String SERVER_TYPE = "serverType";
-    private static String WATCHER_COLLECTION_NAME = "Watcher";
-    private static String GLOBAL_TEMPLATE = "GlobalTemplate";
-    private static String APPLICATION_TEMPLATE = "ApplicationTemplate";
+    private static final String GLOBAL_MONGO_URI = "mongodb+srv://shvmshri:gaurisis@sandbox.zr9k6.mongodb.net/GlobalServers?retryWrites=true&w=majority";
+    private static final String GLOBAL_COLLECTION = "Servers";
+    private static final String GLOBAL_DATABASE = "GlobalServers";
+    private static final String SERVER_CATEGORY = "serverCategory";
+    private static final String SERVER_CATEGORY_VALUE = "MONGO";
+    private static final String SERVER_TYPE = "serverType";
+    private static final String APPLICATION_COLLECTION_NAME = "Watcher";
+    private static final String GLOBAL_TEMPLATE = "GlobalTemplate";
+    private static final String APPLICATION_TEMPLATE = "ApplicationTemplate";
+    private static ConcurrentHashMap<String, MongoTemplate> mongoTemplateMappings = new ConcurrentHashMap<String, MongoTemplate>();
 
     private MongoClient createMongoClient(String uri) {
 
@@ -73,7 +73,7 @@ public class MongoTemplateFactory {
         MongoTemplate globalMongoTemplate = getGlobalMongoTemplate();
         MongoServerInfo mongoServerInfoInfo = getMongoServerInfo(globalMongoTemplate);
         MongoTemplate applicationMongoTemplate = mongoTemplate(mongoServerInfoInfo.getUrl(), mongoServerInfoInfo.getDbName());
-        applicationMongoTemplate.indexOps(WATCHER_COLLECTION_NAME).ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
+        applicationMongoTemplate.indexOps(APPLICATION_COLLECTION_NAME).ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
         return applicationMongoTemplate;
 
     }

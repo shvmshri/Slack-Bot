@@ -25,7 +25,7 @@ public class JenkinsService {
         String message = "A build is invoked by a user with email_Id : " + userEmail + " on chartName = " + chart + " and releaseName = " + release;
 
         try {
-            List<String> userIDList = watcherDBService.searchWatcherUserIds(chart,release);
+            List<String> userIDList = watcherDBService.getWatcherUserIds(chart, release);
             slackMessageDispatchingService.slackSendMsg(userIDList, message);
         } catch (Exception e) {
             LOGGER.error("Error occurred in database server while fetching watcher information to send notification about the build", e);
@@ -33,20 +33,20 @@ public class JenkinsService {
 
     }
 
-    public void handleJobTrigger(JenkinsJobInfo job){
+    public void handleJobTrigger(JenkinsJobInfo job) {
         String chart = job.getChartName();
         String release = job.getReleaseName();
         String userEmail = job.getUserEmail();
         String userId = SlackUtil.findSlackUserId(userEmail);
 
-        handleNotifyUsers(chart,release,userEmail);
-        if(userId == null){
+        handleNotifyUsers(chart, release, userEmail);
+        if (userId == null) {
             LOGGER.error("[JenkinsService_CRITICAL] The user triggering build is not present in Slack Workspace. Hence, can't add the Jenkins User as a Watcher");
             return;
         }
 
-        try{
-            if(!watcherDBService.searchAWatcher(chart,release,userId)){
+        try {
+            if (!watcherDBService.searchAWatcher(chart, release, userId)) {
                 try {
                     watcherDBService.addWatcherInfo(chart, release, DEFAULT_TIME, userId, userEmail);
                     slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.SUCCESS_JENKINS_AS_WATCHER);
@@ -59,7 +59,5 @@ public class JenkinsService {
         }
 
     }
-
-//see if watcheruserids can be changed to userlistinfo
 
 }

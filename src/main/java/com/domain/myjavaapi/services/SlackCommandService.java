@@ -1,7 +1,10 @@
 package com.domain.myjavaapi.services;
 
 import com.domain.myjavaapi.models.Watcher;
+import com.domain.myjavaapi.objectFactory.ChartReleaseDataFactory;
 import com.domain.myjavaapi.utility.SlackMessageConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
@@ -9,17 +12,25 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-
 
 @Service
 public class SlackCommandService {
     private static final Logger LOGGER = LoggerFactory.getLogger(SlackCommandService.class);
     @Autowired
-    private WatcherDatabaseService watcherDBService;
-    @Autowired
     SlackMessageDispatchingService slackMessageDispatchingService;
+    @Autowired
+    ChartReleaseDataFactory chartReleaseDataFactory;
+    @Autowired
+    private WatcherDatabaseService watcherDBService;
+
+    private boolean validateArgs(String chart, String release, String userId) {
+        if (!chartReleaseDataFactory.validateChartRelease(chart, release)) {
+            slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.INVALID_ARGS_VALUE);
+            return false;
+        }
+        return true;
+    }
+
 
     public void handleWatchCommand(String commandArg, String userId, String userEmail) {
 
@@ -27,6 +38,10 @@ public class SlackCommandService {
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
         String time = tokens.nextToken();
+
+        if (!validateArgs(chart, release, userId)) {
+            return;
+        }
 
         try {
             watcherDBService.addWatcherInfo(chart, release, time, userId, userEmail);
@@ -43,6 +58,10 @@ public class SlackCommandService {
         StringTokenizer tokens = new StringTokenizer(commandArg);
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
+
+        if (!validateArgs(chart, release, userId)) {
+            return;
+        }
 
         try {
             Boolean flag = watcherDBService.removeWatcherInfo(chart, release, userId);
@@ -64,8 +83,12 @@ public class SlackCommandService {
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
 
+        if (!validateArgs(chart, release, userId)) {
+            return;
+        }
+
         try {
-            List<Watcher> watcherList = watcherDBService.getWatchersList(chart, release, userId);
+            List<Watcher> watcherList = watcherDBService.getWatcherUserEmails(chart, release, userId);
             ArrayList<String> userEmails = new ArrayList<String>();
 
             for (Watcher watcher : watcherList) {
@@ -83,24 +106,6 @@ public class SlackCommandService {
             LOGGER.error("Error occurred in database server while fetching watcher information.", e);
         }
 
-
-        //add command handler
     }
-
-//    public void handleNotifyUsers(JenkinsJobInfo job) {
-//
-//        String chart = job.getChartName();
-//        String release = job.getReleaseName();
-//        String userStartingBuild = job.getUserEmail();
-//        String message = "A build is invoked by a user with email_Id : " + userStartingBuild + " on chartName = " + chart + " and releaseName = " + release;
-//
-//        try {
-//            List<String> userIDList = watcherDBService.searchWatcherUserIds(job);
-//            slackMessageDispatchingService.slackSendMsg(userIDList, message);
-//        } catch (Exception e) {
-//            LOGGER.error("Error occurred in database server while fetching watcher information to send notification about the build", e);
-//        }
-//
-//    }
 
 }

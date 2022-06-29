@@ -50,9 +50,11 @@ dependencies {
     implementation('com.slack.api:bolt-servlet:1.22.2')
     implementation('com.slack.api:bolt-jetty:1.22.2')
 
-    //For Dispatcher Servlet
-//    implementation ('org.springframework:org.springframework.web.servlet:3.2.1.RELEASE')
+    //For apache httpclient
+    implementation('org.apache.httpcomponents:httpclient:4.5.1')
 
+    //Fr gson
+    implementation ('com.google.code.gson:gson:2.3.1')
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine:${junitVersion}")

@@ -73,9 +73,13 @@ public class Watcher {
         this.userId = userId;
     }
 
-    public String getUserEmail() {return userEmail;}
+    public String getUserEmail() {
+        return userEmail;
+    }
 
-    public void setUserEmail(String userEmail) {this.userEmail = userEmail;}
+    public void setUserEmail(String userEmail) {
+        this.userEmail = userEmail;
+    }
 
     public String getTime() {
         return time;

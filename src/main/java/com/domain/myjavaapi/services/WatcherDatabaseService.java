@@ -1,7 +1,7 @@
 package com.domain.myjavaapi.services;
 
-import com.domain.myjavaapi.config.MongoTemplateFactory;
 import com.domain.myjavaapi.models.Watcher;
+import com.domain.myjavaapi.objectFactory.MongoTemplateFactory;
 import com.mongodb.client.result.DeleteResult;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -22,8 +22,8 @@ public class WatcherDatabaseService {
 
     @Autowired
     private MongoTemplateFactory templateFactory;
-    //private methods
-    public ArrayList<String> searchWatcherUserIds(String chart, String release) throws Exception {
+
+    public ArrayList<String> getWatcherUserIds(String chart, String release) throws Exception {
 
         Criteria criteria = new Criteria();
         criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
@@ -78,7 +78,7 @@ public class WatcherDatabaseService {
     }
 
     //When someone Asks for number of watchers
-    public List<Watcher> getWatchersList(String chart, String release, String userId) throws Exception {
+    public List<Watcher> getWatcherUserEmails(String chart, String release, String userId) throws Exception {
 
         Criteria criteria = new Criteria();
         criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
@@ -102,7 +102,7 @@ public class WatcherDatabaseService {
         MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
         Watcher watcher = mongoTemplate.findOne(query, Watcher.class, Watcher.COLLECTION);
 
-        if(watcher == null) return false;
+        if (watcher == null) return false;
         return true;
 
     }
