@@ -1,6 +1,6 @@
 package com.domain.myjavaapi.config;
 
-import com.domain.myjavaapi.models.Global;
+import com.domain.myjavaapi.models.MongoServerInfo;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
@@ -19,17 +19,17 @@ import java.util.concurrent.ConcurrentHashMap;
 public class MongoTemplateFactory {
 
     private ConcurrentHashMap<String, MongoTemplate> mongoTemplateMappings = new ConcurrentHashMap<String, MongoTemplate>();
-    private static String globalMongoURI = "mongodb+srv://shvmshri:gaurisis@sandbox.zr9k6.mongodb.net/GlobalServers?retryWrites=true&w=majority";
-    private static String globalCollection = "Servers";
-    private static String globalDatabase = "GlobalServers";
+    private static String GLOBAL_MONGO_URI = "mongodb+srv://shvmshri:gaurisis@sandbox.zr9k6.mongodb.net/GlobalServers?retryWrites=true&w=majority";
+    private static String GLOBAL_COLLECTION = "Servers";
+    private static String GLOBAL_DATABASE = "GlobalServers";
     private static String SERVER_CATEGORY = "serverCategory";
     private static String SERVER_CATEGORY_VALUE = "MONGO";
     private static String SERVER_TYPE = "serverType";
-    private static String SERVER_TYPE_VALUE = "SHARED_LINKS";
-    private static String APPLICATION_COLLECTION = "Watcher";
+    private static String WATCHER_COLLECTION_NAME = "Watcher";
+    private static String GLOBAL_TEMPLATE = "GlobalTemplate";
+    private static String APPLICATION_TEMPLATE = "ApplicationTemplate";
 
-
-    private MongoClient mongo(String uri) {
+    private MongoClient createMongoClient(String uri) {
 
         ConnectionString connectionString = new ConnectionString(uri);
         MongoClientSettings mongoClientSettings = MongoClientSettings.builder()
@@ -42,50 +42,50 @@ public class MongoTemplateFactory {
 
     private MongoTemplate mongoTemplate(String uri, String database) {
 
-        return new MongoTemplate(mongo(uri), database);
+        return new MongoTemplate(createMongoClient(uri), database);
     }
 
-    private Global getApplicationInfo(MongoTemplate globalMongoTemplate) {
+    private MongoServerInfo getMongoServerInfo(MongoTemplate globalMongoTemplate) {
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(SERVER_CATEGORY).is(SERVER_CATEGORY_VALUE), Criteria.where(SERVER_TYPE).is(SERVER_TYPE_VALUE));
+        criteria.andOperator(Criteria.where(SERVER_CATEGORY).is(SERVER_CATEGORY_VALUE), Criteria.where(SERVER_TYPE).is(ServerType.SHARED_LINKS));
         Query query = new Query(criteria);
-        Global global = globalMongoTemplate.findOne(query, Global.class, globalCollection);
-        return global;
-
-    }
-
-    private MongoTemplate applicationMongoTemplateHandler() {
-
-        MongoTemplate globalMongoTemplate = getGlobalMongoTemplate();
-        Global globalInfo = getApplicationInfo(globalMongoTemplate);
-        MongoTemplate applicationMongoTemplate = mongoTemplate(globalInfo.getUrl(), globalInfo.getDbName());
-        applicationMongoTemplate.indexOps(APPLICATION_COLLECTION).ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
-        return applicationMongoTemplate;
+        MongoServerInfo mongoServerInfo = globalMongoTemplate.findOne(query, MongoServerInfo.class, GLOBAL_COLLECTION);
+        return mongoServerInfo;
 
     }
 
     public MongoTemplate getGlobalMongoTemplate() {
 
         MongoTemplate globalMongoTemplate;
-        if (mongoTemplateMappings.containsKey("GLOBAL")) {
-            globalMongoTemplate = mongoTemplateMappings.get("GLOBAL");
+        if (mongoTemplateMappings.containsKey(GLOBAL_TEMPLATE)) {
+            globalMongoTemplate = mongoTemplateMappings.get(GLOBAL_TEMPLATE);
         } else {
-            globalMongoTemplate = mongoTemplate(globalMongoURI, globalDatabase);
-            mongoTemplateMappings.put("GLOBAL", globalMongoTemplate);
+            globalMongoTemplate = mongoTemplate(GLOBAL_MONGO_URI, GLOBAL_DATABASE);
+            mongoTemplateMappings.put(GLOBAL_TEMPLATE, globalMongoTemplate);
         }
         return globalMongoTemplate;
+
+    }
+
+    private MongoTemplate initApplicationMongoTemplate() {
+
+        MongoTemplate globalMongoTemplate = getGlobalMongoTemplate();
+        MongoServerInfo mongoServerInfoInfo = getMongoServerInfo(globalMongoTemplate);
+        MongoTemplate applicationMongoTemplate = mongoTemplate(mongoServerInfoInfo.getUrl(), mongoServerInfoInfo.getDbName());
+        applicationMongoTemplate.indexOps(WATCHER_COLLECTION_NAME).ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
+        return applicationMongoTemplate;
 
     }
 
     public MongoTemplate getApplicationMongoTemplate() {
 
         MongoTemplate applicationMongoTemplate;
-        if (mongoTemplateMappings.containsKey("APPLICATION")) {
-            applicationMongoTemplate = mongoTemplateMappings.get("APPLICATION");
+        if (mongoTemplateMappings.containsKey(APPLICATION_TEMPLATE)) {
+            applicationMongoTemplate = mongoTemplateMappings.get(APPLICATION_TEMPLATE);
         } else {
-            applicationMongoTemplate = applicationMongoTemplateHandler();
-            mongoTemplateMappings.put("APPLICATION", applicationMongoTemplate);
+            applicationMongoTemplate = initApplicationMongoTemplate();
+            mongoTemplateMappings.put(APPLICATION_TEMPLATE, applicationMongoTemplate);
         }
         return applicationMongoTemplate;
 

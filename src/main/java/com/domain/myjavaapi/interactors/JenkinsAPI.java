@@ -1,7 +1,8 @@
 package com.domain.myjavaapi.interactors;
 
 import com.domain.myjavaapi.models.JenkinsJobInfo;
-import com.domain.myjavaapi.services.WatcherSlackService;
+import com.domain.myjavaapi.services.JenkinsService;
+import com.domain.myjavaapi.services.SlackCommandService;
 import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.MediaType;
@@ -11,17 +12,20 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import org.springframework.stereotype.Service;
 
 @ApplicationPath("/api")
-@Path("/notify-watchers")
+@Path("/jenkins")
 
 @Service
-public class NotifyWatchersAPI extends Application {
+public class JenkinsAPI extends Application {
+
     @POST
+    @Path("/on-job-trigger")
     @Consumes(MediaType.APPLICATION_JSON)
-    public Response JenkinsHandler(JenkinsJobInfo jobDetails) {
+    public Response onJobTrigger(JenkinsJobInfo jobDetails) {
 
         ApplicationContext ctx = new AnnotationConfigApplicationContext("com.domain.myjavaapi");
-        WatcherSlackService watcherSlackService = ctx.getBean(WatcherSlackService.class);
-        watcherSlackService.handleNotifyUsers(jobDetails);
+        JenkinsService jenkinsService = ctx.getBean(JenkinsService.class);
+
+        jenkinsService.handleJobTrigger(jobDetails);
         return Response.ok().entity("Thanks! We received your data").build();
 
     }

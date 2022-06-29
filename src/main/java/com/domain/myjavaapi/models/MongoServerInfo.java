@@ -1,6 +1,6 @@
 package com.domain.myjavaapi.models;
 
-public class Global {
+public class MongoServerInfo {
     private String url;
     private String dbName;
 

@@ -1,7 +1,6 @@
 package com.domain.myjavaapi.services;
 
 import com.domain.myjavaapi.config.MongoTemplateFactory;
-import com.domain.myjavaapi.models.JenkinsJobInfo;
 import com.domain.myjavaapi.models.Watcher;
 import com.mongodb.client.result.DeleteResult;
 import org.slf4j.Logger;
@@ -17,24 +16,24 @@ import java.util.ArrayList;
 import java.util.List;
 
 @Service
-public class WatcherDBService {
+public class WatcherDatabaseService {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(WatcherDBService.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(WatcherDatabaseService.class);
 
     @Autowired
     private MongoTemplateFactory templateFactory;
-
-    public ArrayList<String> searchWatcherUserIds(JenkinsJobInfo job) throws Exception {
+    //private methods
+    public ArrayList<String> searchWatcherUserIds(String chart, String release) throws Exception {
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(job.getChartName()), Criteria.where(Watcher.RELEASENAME).is(job.getReleaseName()));
+        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
 
         Query query = new Query(criteria);
         query.fields().include(Watcher.USERID);
 
         MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
 
-        List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, "Watcher");
+        List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
         ArrayList<String> userIds = new ArrayList<String>();
         for (Watcher watcher : watcherList) {
             userIds.add(watcher.getUserId());
@@ -56,7 +55,7 @@ public class WatcherDBService {
         MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
 
         FindAndReplaceOptions options = new FindAndReplaceOptions().upsert().returnNew();
-        mongoTemplate.findAndReplace(query, watcher, options, Watcher.class, "Watcher");
+        mongoTemplate.findAndReplace(query, watcher, options, Watcher.class, Watcher.COLLECTION);
 
     }
 
@@ -70,7 +69,7 @@ public class WatcherDBService {
 
         MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
 
-        DeleteResult result = mongoTemplate.remove(query, Watcher.class, "Watcher");
+        DeleteResult result = mongoTemplate.remove(query, Watcher.class, Watcher.COLLECTION);
         if (result.getDeletedCount() == 0) {
             return false;
         }
@@ -79,7 +78,7 @@ public class WatcherDBService {
     }
 
     //When someone Asks for number of watchers
-    public List<Watcher> UsersListInfo(String chart, String release, String userId) throws Exception {
+    public List<Watcher> getWatchersList(String chart, String release, String userId) throws Exception {
 
         Criteria criteria = new Criteria();
         criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
@@ -89,8 +88,23 @@ public class WatcherDBService {
 
         MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
 
-        List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, "Watcher");
+        List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
         return watcherList;
+    }
+
+    public boolean searchAWatcher(String chart, String release, String userId) throws Exception {
+        Criteria criteria = new Criteria();
+        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
+        criteria = criteria.and(Watcher.USERID).is(userId);
+
+        Query query = new Query(criteria);
+
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+        Watcher watcher = mongoTemplate.findOne(query, Watcher.class, Watcher.COLLECTION);
+
+        if(watcher == null) return false;
+        return true;
+
     }
 
 }

@@ -1,6 +1,5 @@
 package com.domain.myjavaapi.services;
 
-import com.domain.myjavaapi.models.JenkinsJobInfo;
 import com.domain.myjavaapi.models.Watcher;
 import com.domain.myjavaapi.utility.SlackMessageConstants;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -15,10 +14,10 @@ import org.slf4j.LoggerFactory;
 
 
 @Service
-public class WatcherSlackService {
-    private static final Logger LOGGER = LoggerFactory.getLogger(WatcherSlackService.class);
+public class SlackCommandService {
+    private static final Logger LOGGER = LoggerFactory.getLogger(SlackCommandService.class);
     @Autowired
-    private WatcherDBService watcherDBService;
+    private WatcherDatabaseService watcherDBService;
     @Autowired
     SlackMessageDispatchingService slackMessageDispatchingService;
 
@@ -66,7 +65,7 @@ public class WatcherSlackService {
         String release = tokens.nextToken();
 
         try {
-            List<Watcher> watcherList = watcherDBService.UsersListInfo(chart, release, userId);
+            List<Watcher> watcherList = watcherDBService.getWatchersList(chart, release, userId);
             ArrayList<String> userEmails = new ArrayList<String>();
 
             for (Watcher watcher : watcherList) {
@@ -84,22 +83,24 @@ public class WatcherSlackService {
             LOGGER.error("Error occurred in database server while fetching watcher information.", e);
         }
 
+
+        //add command handler
     }
 
-    public void handleNotifyUsers(JenkinsJobInfo job) {
-
-        String chart = job.getChartName();
-        String release = job.getReleaseName();
-        String userStartingBuild = job.getUserEmail();
-        String message = "A build is invoked by a user with email_Id : " + userStartingBuild + " on chartName = " + chart + " and releaseName = " + release;
-
-        try {
-            List<String> userIDList = watcherDBService.searchWatcherUserIds(job);
-            slackMessageDispatchingService.slackSendMsg(userIDList, message);
-        } catch (Exception e) {
-            LOGGER.error("Error occurred in database server while fetching watcher information to send notification about the build", e);
-        }
-
-    }
+//    public void handleNotifyUsers(JenkinsJobInfo job) {
+//
+//        String chart = job.getChartName();
+//        String release = job.getReleaseName();
+//        String userStartingBuild = job.getUserEmail();
+//        String message = "A build is invoked by a user with email_Id : " + userStartingBuild + " on chartName = " + chart + " and releaseName = " + release;
+//
+//        try {
+//            List<String> userIDList = watcherDBService.searchWatcherUserIds(job);
+//            slackMessageDispatchingService.slackSendMsg(userIDList, message);
+//        } catch (Exception e) {
+//            LOGGER.error("Error occurred in database server while fetching watcher information to send notification about the build", e);
+//        }
+//
+//    }
 
 }

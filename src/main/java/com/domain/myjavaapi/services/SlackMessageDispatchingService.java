@@ -24,6 +24,7 @@ public class SlackMessageDispatchingService {
         }
 
     }
+    //necche vala try catch is redundant?
 
     public void slackSendMsg(List<String> userIDList, String message) {
 

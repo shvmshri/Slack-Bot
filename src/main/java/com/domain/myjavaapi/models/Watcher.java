@@ -15,6 +15,7 @@ public class Watcher {
     public static String USEREMAIL = "userEmail";
     public static String TIME = "time";
     public static String EXPIREAT = "expireAt";
+    public static String COLLECTION = "Watcher";
 
     @Id
     private String id;

@@ -1,6 +1,6 @@
 package com.domain.myjavaapi.handlers;
 
-import com.domain.myjavaapi.services.WatcherSlackService;
+import com.domain.myjavaapi.services.SlackCommandService;
 import com.domain.myjavaapi.utility.SlackMessageConstants;
 import com.domain.myjavaapi.utility.Utils;
 import com.slack.api.bolt.App;
@@ -18,7 +18,7 @@ public class CommandHandler {
     private static final Logger LOGGER = LoggerFactory.getLogger(CommandHandler.class);
 
     @Autowired
-    private WatcherSlackService slackService;
+    private SlackCommandService slackService;
 
     public App createAndConfigApp() {
 
@@ -46,7 +46,7 @@ public class CommandHandler {
             String userId = req.getPayload().getUserId();
             User user = ctx.client().usersInfo(r -> r.token(ctx.getBotToken()).user(userId)).getUser();
             String userEmail = user.getProfile().getEmail();
-            int numArg = Utils.numArgCheck(commandArgText);
+            int numArg = Utils.numArgs(commandArgText);
             //If the args were valid then doing further async computations
 
             if (numArg == 3) {
@@ -69,7 +69,7 @@ public class CommandHandler {
             String commandArgText = req.getPayload().getText();
             String userId = req.getPayload().getUserId();
 
-            int numArg = Utils.numArgCheck(commandArgText);
+            int numArg = Utils.numArgs(commandArgText);
             //If the args were valid then doing further async computations
             if (numArg == 2) {
                 app.executorService().submit(() -> {
@@ -90,7 +90,7 @@ public class CommandHandler {
             String commandArgText = req.getPayload().getText();
             String userId = req.getPayload().getUserId();
 
-            int numArg = Utils.numArgCheck(commandArgText);
+            int numArg = Utils.numArgs(commandArgText);
             //If the args were valid then doing further async computations
             if (numArg == 2) {
                 app.executorService().submit(() -> {
@@ -111,7 +111,7 @@ public class CommandHandler {
         app.command("/demo_app", (req, ctx) -> {
             String commandArgText = req.getPayload().getText();
 
-            int numArg = Utils.numArgCheck(commandArgText);
+            int numArg = Utils.numArgs(commandArgText);
 
             String text = (numArg == 1 && commandArgText.equalsIgnoreCase("Help")) ? SlackMessageConstants.HELP_TEXT : SlackMessageConstants.INVALID_ARGS;
             return ctx.ack(text);
@@ -120,3 +120,5 @@ public class CommandHandler {
     }
 
 }
+
+//move to slackcommand service

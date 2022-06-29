@@ -6,7 +6,7 @@ import java.util.StringTokenizer;
 
 public class Utils {
 
-    public static int numArgCheck(String text) {
+    public static int numArgs(String text) {
         if (text == null || text.isEmpty()) {
             return 0;
         }
@@ -38,6 +38,5 @@ public class Utils {
 
         return calendar.getTime();
     }
-
 
 }
