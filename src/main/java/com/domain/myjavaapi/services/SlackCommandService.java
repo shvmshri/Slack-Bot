@@ -3,6 +3,7 @@ package com.domain.myjavaapi.services;
 import com.domain.myjavaapi.models.Watcher;
 import com.domain.myjavaapi.objectFactory.ChartReleaseDataFactory;
 import com.domain.myjavaapi.utility.SlackMessageConstants;
+import com.domain.myjavaapi.utility.Utils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,7 +24,7 @@ public class SlackCommandService {
     @Autowired
     private WatcherDatabaseService watcherDBService;
 
-    private boolean validateArgs(String chart, String release, String userId) {
+    private boolean chartReleaseNamesValidate(String chart, String release, String userId) {
         if (!chartReleaseDataFactory.validateChartRelease(chart, release)) {
             slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.INVALID_ARGS_VALUE);
             return false;
@@ -31,6 +32,13 @@ public class SlackCommandService {
         return true;
     }
 
+    private boolean timeFormatValidate(String time, String userId) {
+        if (!Utils.checkTimeFormat(time)) {
+            slackMessageDispatchingService.slackSendMsg(userId, SlackMessageConstants.INVALID_TIME);
+            return false;
+        }
+        return true;
+    }
 
     public void handleWatchCommand(String commandArg, String userId, String userEmail) {
 
@@ -39,7 +47,7 @@ public class SlackCommandService {
         String release = tokens.nextToken();
         String time = tokens.nextToken();
 
-        if (!validateArgs(chart, release, userId)) {
+        if ((!chartReleaseNamesValidate(chart, release, userId)) || (!timeFormatValidate(time, userId))) {
             return;
         }
 
@@ -59,7 +67,7 @@ public class SlackCommandService {
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
 
-        if (!validateArgs(chart, release, userId)) {
+        if (chartReleaseNamesValidate(chart, release, userId)) {
             return;
         }
 
@@ -83,7 +91,7 @@ public class SlackCommandService {
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
 
-        if (!validateArgs(chart, release, userId)) {
+        if (chartReleaseNamesValidate(chart, release, userId)) {
             return;
         }
 

@@ -27,13 +27,9 @@ public class SlackMessageDispatchingService {
 
     public void slackSendMsg(List<String> userIDList, String message) {
 
-        try {
             for (String userID : userIDList) {
                 slackSendMsg(userID, message);
             }
-        } catch (Exception e) {
-            LOGGER.error("Error occurred while sending notification about the build to Watchers through Slack", e);
-        }
 
     }
 

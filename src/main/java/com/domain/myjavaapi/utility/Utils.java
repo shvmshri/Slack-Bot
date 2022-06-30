@@ -15,22 +15,34 @@ public class Utils {
 
     }
 
-    public static Date findExpireDate(String time) {
+    public static boolean checkTimeFormat(String time){
 
-        int timeInt = 0;
-        char last = time.charAt(time.length() - 1);
-        time = time.substring(0, time.length() - 1);
-        if (time.length() > 0) {
-            timeInt = Integer.parseInt(time);
+        if ((time.length()-1) > 0) {
+            try{
+                int timeInt =   Integer.parseInt(time.substring(0, time.length() - 1));
+                char last = time.charAt(time.length() - 1);
+                return (last == 'H' || last == 'h' || last == 'M' || last == 'm');
+            } catch(Exception e){
+                return false;
+            }
         } else {
-            return new Date();
+           return false;
         }
 
+    }
+
+    public static Date findExpireDate(String time) {
+
+        if(!checkTimeFormat(time)){
+            return new Date();
+        }
         Date date = new Date();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
 
-        if (last == 'h' || last == 'H') {
+        char lastChar = time.charAt(time.length()-1);
+        int timeInt = Integer.parseInt(time.substring(0,time.length()-1));
+        if (lastChar == 'h' || lastChar == 'H') {
             calendar.add(Calendar.HOUR_OF_DAY, timeInt);
         } else {
             calendar.add(Calendar.MINUTE, timeInt);
