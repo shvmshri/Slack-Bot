@@ -89,11 +89,7 @@ public class ChartReleaseDataFactory {
         chartReleaseMappings.clear();
         fetchChartReleaseData();
         if (chartReleaseMappings.containsKey(chart)) {
-            if (chartReleaseMappings.get(chart).contains(release)) {
-                return true;
-            } else {
-                return false;
-            }
+            return chartReleaseMappings.get(chart).contains(release);
         } else {
             return false;
         }
