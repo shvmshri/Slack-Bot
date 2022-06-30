@@ -9,12 +9,12 @@ import java.util.Date;
 @Document(collection = "Watcher")
 public class Watcher {
     public static String ID = "id";
-    public static String CHARTNAME = "chartName";
-    public static String RELEASENAME = "releaseName";
-    public static String USERID = "userId";
-    public static String USEREMAIL = "userEmail";
+    public static String CHART_NAME = "chartName";
+    public static String RELEASE_NAME = "releaseName";
+    public static String USER_ID = "userId";
+    public static String USER_EMAIL = "userEmail";
     public static String TIME = "time";
-    public static String EXPIREAT = "expireAt";
+    public static String EXPIRE_AT = "expireAt";
     public static String COLLECTION = "Watcher";
 
     @Id

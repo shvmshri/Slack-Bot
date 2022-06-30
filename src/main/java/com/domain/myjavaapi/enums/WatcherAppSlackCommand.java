@@ -2,7 +2,7 @@ package com.domain.myjavaapi.enums;
 
 import com.domain.myjavaapi.utility.SlackMessageConstants;
 
-public enum SlackCommand {
+public enum WatcherAppSlackCommand {
     ADD_WATCHER("/watch", 3, SlackMessageConstants.THANK_YOU),
     REMOVE_WATCHER("/unwatch", 2, SlackMessageConstants.THANK_YOU),
     WATCHERS_LIST("/watchers_list", 2, SlackMessageConstants.THANK_YOU),
@@ -12,7 +12,7 @@ public enum SlackCommand {
     private int numArgs;
     private String ackText;
 
-    SlackCommand(String command, int numArgs, String ackText) {
+    WatcherAppSlackCommand(String command, int numArgs, String ackText) {
         this.command = command;
         this.numArgs = numArgs;
         this.ackText = ackText;

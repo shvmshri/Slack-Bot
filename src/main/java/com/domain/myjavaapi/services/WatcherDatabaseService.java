@@ -1,5 +1,6 @@
 package com.domain.myjavaapi.services;
 
+import com.domain.myjavaapi.enums.ServerType;
 import com.domain.myjavaapi.models.Watcher;
 import com.domain.myjavaapi.objectFactory.MongoTemplateFactory;
 import com.mongodb.client.result.DeleteResult;
@@ -26,12 +27,12 @@ public class WatcherDatabaseService {
     public ArrayList<String> getWatcherUserIds(String chart, String release) throws Exception {
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
+        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
 
         Query query = new Query(criteria);
-        query.fields().include(Watcher.USERID);
+        query.fields().include(Watcher.USER_ID);
 
-        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
 
         List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
         ArrayList<String> userIds = new ArrayList<String>();
@@ -47,12 +48,12 @@ public class WatcherDatabaseService {
         Watcher watcher = new Watcher(chart, release, time, userId, userEmail);
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(watcher.getChartName()), Criteria.where(Watcher.RELEASENAME).is(watcher.getReleaseName()));
-        criteria = criteria.and(Watcher.USERID).is(watcher.getUserId());
+        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(watcher.getChartName()), Criteria.where(Watcher.RELEASE_NAME).is(watcher.getReleaseName()));
+        criteria = criteria.and(Watcher.USER_ID).is(watcher.getUserId());
 
         Query query = new Query(criteria);
 
-        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
 
         FindAndReplaceOptions options = new FindAndReplaceOptions().upsert().returnNew();
         mongoTemplate.findAndReplace(query, watcher, options, Watcher.class, Watcher.COLLECTION);
@@ -62,18 +63,15 @@ public class WatcherDatabaseService {
     public boolean removeWatcherInfo(String chart, String release, String userId) throws Exception {
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
-        criteria = criteria.and(Watcher.USERID).is(userId);
+        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
+        criteria = criteria.and(Watcher.USER_ID).is(userId);
 
         Query query = new Query(criteria);
 
-        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
 
         DeleteResult result = mongoTemplate.remove(query, Watcher.class, Watcher.COLLECTION);
-        if (result.getDeletedCount() == 0) {
-            return false;
-        }
-        return true;
+        return (result.getDeletedCount() != 0);
 
     }
 
@@ -81,29 +79,28 @@ public class WatcherDatabaseService {
     public List<Watcher> getWatcherUserEmails(String chart, String release, String userId) throws Exception {
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
+        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
 
         Query query = new Query(criteria);
-        query.fields().include(Watcher.USEREMAIL);
+        query.fields().include(Watcher.USER_EMAIL);
 
-        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
 
-        List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
-        return watcherList;
+        return mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
+
     }
 
     public boolean searchAWatcher(String chart, String release, String userId) throws Exception {
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(Watcher.CHARTNAME).is(chart), Criteria.where(Watcher.RELEASENAME).is(release));
-        criteria = criteria.and(Watcher.USERID).is(userId);
+        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
+        criteria = criteria.and(Watcher.USER_ID).is(userId);
 
         Query query = new Query(criteria);
 
-        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate();
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
         Watcher watcher = mongoTemplate.findOne(query, Watcher.class, Watcher.COLLECTION);
 
-        if (watcher == null) return false;
-        return true;
+        return (watcher != null);
 
     }
 

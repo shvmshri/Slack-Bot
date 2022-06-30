@@ -25,9 +25,7 @@ public class MongoTemplateFactory {
     private static final String SERVER_CATEGORY_VALUE = "MONGO";
     private static final String SERVER_TYPE = "serverType";
     private static final String APPLICATION_COLLECTION_NAME = "Watcher";
-    private static final String GLOBAL_TEMPLATE = "GlobalTemplate";
-    private static final String APPLICATION_TEMPLATE = "ApplicationTemplate";
-    private static ConcurrentHashMap<String, MongoTemplate> mongoTemplateMappings = new ConcurrentHashMap<String, MongoTemplate>();
+    private static ConcurrentHashMap<ServerType, MongoTemplate> mongoTemplateMappings = new ConcurrentHashMap<ServerType, MongoTemplate>();
 
     private MongoClient createMongoClient(String uri) {
 
@@ -45,49 +43,36 @@ public class MongoTemplateFactory {
         return new MongoTemplate(createMongoClient(uri), database);
     }
 
-    private MongoServerInfo getMongoServerInfo(MongoTemplate globalMongoTemplate) {
+    private MongoServerInfo getMongoServerInfo(MongoTemplate globalMongoTemplate, ServerType serverType) {
 
         Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(SERVER_CATEGORY).is(SERVER_CATEGORY_VALUE), Criteria.where(SERVER_TYPE).is(ServerType.SHARED_LINKS));
+        criteria.andOperator(Criteria.where(SERVER_CATEGORY).is(SERVER_CATEGORY_VALUE), Criteria.where(SERVER_TYPE).is(serverType));
         Query query = new Query(criteria);
-        MongoServerInfo mongoServerInfo = globalMongoTemplate.findOne(query, MongoServerInfo.class, GLOBAL_COLLECTION);
-        return mongoServerInfo;
+        return globalMongoTemplate.findOne(query, MongoServerInfo.class, GLOBAL_COLLECTION);
 
     }
 
     public MongoTemplate getGlobalMongoTemplate() {
 
-        MongoTemplate globalMongoTemplate;
-        if (mongoTemplateMappings.containsKey(GLOBAL_TEMPLATE)) {
-            globalMongoTemplate = mongoTemplateMappings.get(GLOBAL_TEMPLATE);
-        } else {
-            globalMongoTemplate = mongoTemplate(GLOBAL_MONGO_URI, GLOBAL_DATABASE);
-            mongoTemplateMappings.put(GLOBAL_TEMPLATE, globalMongoTemplate);
-        }
-        return globalMongoTemplate;
+        mongoTemplateMappings.putIfAbsent(ServerType.GLOBAL,mongoTemplate(GLOBAL_MONGO_URI, GLOBAL_DATABASE));
+        return mongoTemplateMappings.get(ServerType.GLOBAL);
 
     }
 
-    private MongoTemplate initApplicationMongoTemplate() {
+    private MongoTemplate initApplicationMongoTemplate(ServerType serverType) {
 
         MongoTemplate globalMongoTemplate = getGlobalMongoTemplate();
-        MongoServerInfo mongoServerInfoInfo = getMongoServerInfo(globalMongoTemplate);
+        MongoServerInfo mongoServerInfoInfo = getMongoServerInfo(globalMongoTemplate,serverType);
         MongoTemplate applicationMongoTemplate = mongoTemplate(mongoServerInfoInfo.getUrl(), mongoServerInfoInfo.getDbName());
         applicationMongoTemplate.indexOps(APPLICATION_COLLECTION_NAME).ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
         return applicationMongoTemplate;
 
     }
 
-    public MongoTemplate getApplicationMongoTemplate() {
+    public MongoTemplate getApplicationMongoTemplate(ServerType serverType) {
 
-        MongoTemplate applicationMongoTemplate;
-        if (mongoTemplateMappings.containsKey(APPLICATION_TEMPLATE)) {
-            applicationMongoTemplate = mongoTemplateMappings.get(APPLICATION_TEMPLATE);
-        } else {
-            applicationMongoTemplate = initApplicationMongoTemplate();
-            mongoTemplateMappings.put(APPLICATION_TEMPLATE, applicationMongoTemplate);
-        }
-        return applicationMongoTemplate;
+        mongoTemplateMappings.putIfAbsent(serverType,initApplicationMongoTemplate(serverType));
+        return mongoTemplateMappings.get(serverType);
 
     }
 

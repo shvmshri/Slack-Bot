@@ -14,15 +14,15 @@ import java.util.List;
 public class JenkinsService {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(JenkinsService.class);
-    private static String DEFAULT_TIME = "5h";
+    private static final String DEFAULT_TIME = "5h";
     @Autowired
     WatcherDatabaseService watcherDBService;
     @Autowired
     SlackMessageDispatchingService slackMessageDispatchingService;
 
-    private void handleNotifyUsers(String chart, String release, String userEmail) {
+    private void handleNotifyUsers(String chart, String release, String userEmail, String jobLink) {
 
-        String message = "A build is invoked by a user with email_Id : " + userEmail + " on chartName = " + chart + " and releaseName = " + release;
+        String message = "A build is invoked by a user with email_Id : " + userEmail + " on chartName = " + chart + " and releaseName = " + release + "and the job link is: " + jobLink;
 
         try {
             List<String> userIDList = watcherDBService.getWatcherUserIds(chart, release);
@@ -37,9 +37,10 @@ public class JenkinsService {
         String chart = job.getChartName();
         String release = job.getReleaseName();
         String userEmail = job.getUserEmail();
+        String jobLink = job.getJobLink();
         String userId = SlackUtil.findSlackUserId(userEmail);
 
-        handleNotifyUsers(chart, release, userEmail);
+        handleNotifyUsers(chart, release, userEmail, jobLink);
         if (userId == null) {
             LOGGER.error("[JenkinsService_CRITICAL] The user triggering build is not present in Slack Workspace. Hence, can't add the Jenkins User as a Watcher");
             return;

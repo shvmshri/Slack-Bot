@@ -5,6 +5,7 @@ public class JenkinsJobInfo {
     private String chartName;
     private String releaseName;
     private String userEmail;
+    private String jobLink;
 
     public String getChartName() {
         return chartName;
@@ -26,7 +27,16 @@ public class JenkinsJobInfo {
         return userEmail;
     }
 
+    public String getJobLink() {
+        return jobLink;
+    }
+
+    public void setJobLink(String jobLink) {
+        this.jobLink = jobLink;
+    }
+
     public void setUserEmail(String userEmail) {
         this.userEmail = userEmail;
     }
+
 }

@@ -26,7 +26,7 @@ public class ChartReleaseDataFactory {
     private static final String TOKEN = "token";
     private static final String K8S = "k8s";
     private static final String PARAM_NAME = "repo";
-    private static ConcurrentHashMap<String, List<String>> chartReleaseMappings = new ConcurrentHashMap<String, List<String>>();
+    private static final ConcurrentHashMap<String, List<String>> chartReleaseMappings = new ConcurrentHashMap<String, List<String>>();
     private static List<String> repositryNames = new ArrayList<>(Arrays.asList("Sprinklr Main App"));
 
 
