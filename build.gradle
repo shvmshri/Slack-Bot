@@ -28,22 +28,17 @@ dependencies {
     implementation('org.glassfish.jersey.inject:jersey-cdi2-se:3.0.4')
     implementation('org.jboss.weld.se:weld-se-core:4.0.3.Final')
 
-    implementation('org.json:json:20220320')
-    implementation('com.googlecode.json-simple:json-simple:1.1.1')
-
     //For mongo driver
     implementation('org.mongodb:mongodb-driver-sync:4.6.1')
 
     //For bean injection
     implementation('org.springframework:spring-context:5.3.21')
-    implementation('org.springframework:spring-core:5.3.21')
+
+    //For Logger
+    implementation("org.slf4j:slf4j-simple:1.7.36")
 
     //For spring mongo
     implementation('org.springframework.data:spring-data-mongodb:3.4.0')
-    implementation('org.springframework.boot:spring-boot-starter-data-mongodb:2.7.0')
-
-    //For httpurlconnection
-    implementation('org.dmfs:httpurlconnection-executor:1.16.2')
 
     //For slack
     implementation('com.slack.api:bolt:1.22.2')
@@ -53,7 +48,7 @@ dependencies {
     //For apache httpclient
     implementation('org.apache.httpcomponents:httpclient:4.5.1')
 
-    //Fr gson
+    //For gson
     implementation ('com.google.code.gson:gson:2.3.1')
 
     testImplementation("org.junit.jupiter:junit-jupiter-api:${junitVersion}")

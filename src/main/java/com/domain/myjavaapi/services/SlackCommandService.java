@@ -67,7 +67,7 @@ public class SlackCommandService {
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
 
-        if (chartReleaseNamesValidate(chart, release, userId)) {
+        if (!chartReleaseNamesValidate(chart, release, userId)) {
             return;
         }
 
@@ -91,7 +91,7 @@ public class SlackCommandService {
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
 
-        if (chartReleaseNamesValidate(chart, release, userId)) {
+        if (!chartReleaseNamesValidate(chart, release, userId)) {
             return;
         }
 
