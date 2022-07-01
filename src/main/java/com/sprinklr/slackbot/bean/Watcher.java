@@ -1,12 +1,10 @@
-package com.domain.myjavaapi.models;
+package com.sprinklr.slackbot.bean;
 
-import com.domain.myjavaapi.utility.Utils;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.mongodb.core.mapping.Document;
+import com.sprinklr.slackbot.util.Utils;
+
 
 import java.util.Date;
 
-@Document(collection = "Watcher")
 public class Watcher {
     public static String ID = "id";
     public static String CHART_NAME = "chartName";
@@ -17,7 +15,7 @@ public class Watcher {
     public static String EXPIRE_AT = "expireAt";
     public static String COLLECTION = "Watcher";
 
-    @Id
+
     private String id;
     private String chartName;
     private String releaseName;

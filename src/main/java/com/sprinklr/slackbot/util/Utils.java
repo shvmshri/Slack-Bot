@@ -1,4 +1,4 @@
-package com.domain.myjavaapi.utility;
+package com.sprinklr.slackbot.util;
 
 import java.util.Calendar;
 import java.util.Date;

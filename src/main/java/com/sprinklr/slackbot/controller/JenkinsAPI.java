@@ -1,8 +1,8 @@
-package com.domain.myjavaapi.controller;
+package com.sprinklr.slackbot.controller;
 
-import com.domain.myjavaapi.models.JenkinsJobInfo;
-import com.domain.myjavaapi.services.JenkinsService;
-import com.domain.myjavaapi.utility.SlackMessageConstants;
+import com.sprinklr.slackbot.bean.JenkinsJobInfo;
+import com.sprinklr.slackbot.service.JenkinsService;
+import com.sprinklr.slackbot.util.WatcherAppMessageConstants;
 import jakarta.ws.rs.ApplicationPath;
 import jakarta.ws.rs.Consumes;
 import jakarta.ws.rs.POST;
@@ -25,11 +25,11 @@ public class JenkinsAPI extends Application {
     @Consumes(MediaType.APPLICATION_JSON)
     public Response onJobTrigger(JenkinsJobInfo jobDetails) {
 
-        ApplicationContext ctx = new AnnotationConfigApplicationContext("com.domain.myjavaapi");
+        ApplicationContext ctx = new AnnotationConfigApplicationContext("com.sprinklr.slackbot");
         JenkinsService jenkinsService = ctx.getBean(JenkinsService.class);
 
         jenkinsService.handleJobTrigger(jobDetails);
-        return Response.ok().entity(SlackMessageConstants.THANK_YOU).build();
+        return Response.ok().entity(WatcherAppMessageConstants.THANK_YOU).build();
 
     }
 

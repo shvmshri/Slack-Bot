@@ -1,7 +1,7 @@
-package com.domain.myjavaapi.services;
+package com.sprinklr.slackbot.service;
 
 
-import com.domain.myjavaapi.models.Watcher;
+import com.sprinklr.slackbot.bean.Watcher;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;

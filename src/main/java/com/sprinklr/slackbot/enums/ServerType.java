@@ -1,4 +1,4 @@
-package com.domain.myjavaapi.enums;
+package com.sprinklr.slackbot.enums;
 
 public enum ServerType {
     GLOBAL,

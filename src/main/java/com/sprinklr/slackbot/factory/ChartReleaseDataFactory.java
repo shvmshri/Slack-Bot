@@ -1,4 +1,4 @@
-package com.domain.myjavaapi.objectFactory;
+package com.sprinklr.slackbot.factory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
@@ -33,14 +33,14 @@ public class ChartReleaseDataFactory {
     private void storeDataInMap(String chartReleaseInfo) {
         try {
             // Just to test
-             chartReleaseInfo = "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}";
+            //chartReleaseInfo = "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}";
             Map<String, Map<String, List<String>>> map = new Gson().fromJson(chartReleaseInfo, new TypeToken<HashMap<String, Map<String, List<String>>>>() {
             }.getType());
             for (Map.Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
                 chartReleaseMappings.put(entry.getKey(), entry.getValue().get(K8S));
             }
         } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error while using GSON to convert JSON string to map");
+            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error while using GSON to convert JSON string to map", e);
         }
     }
 
@@ -56,7 +56,7 @@ public class ChartReleaseDataFactory {
             assert request != null;
             request.setURI(uri);
         } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error occurred due to the attempt of using invalid URL to fetch data about chartNames and ReleaseNames for the repository = " + paramValue);
+            LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error occurred due to the attempt of using invalid URL to fetch data about chartNames and ReleaseNames for the repository = " + paramValue, e);
         }
 
         return request;
@@ -72,7 +72,7 @@ public class ChartReleaseDataFactory {
                 String result = EntityUtils.toString(httpResponse.getEntity());
                 storeDataInMap(result);
             } catch (Exception e) {
-                LOGGER.error("[ChartReleaseDataCache_CRITICAL] Error occurred while executing request of fetching data from red API regarding chart and release details for repositry " + repo);
+                LOGGER.error("[ChartReleaseDataCache_CRITICAL] Error occurred while executing request of fetching data from red API regarding chart and release details for repositry " + repo, e);
             }
 
         }
@@ -80,15 +80,15 @@ public class ChartReleaseDataFactory {
         try {
             httpclient.close();
         } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error occurred while closing Http Client");
+            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error occurred while closing Http Client", e);
         }
 
     }
 
     public boolean validateChartRelease(String chart, String release) {
         chartReleaseMappings.clear();
-        //fetchChartReleaseData();
-        storeDataInMap("hi");
+        fetchChartReleaseData();
+        //storeDataInMap("j");
         if (chartReleaseMappings.containsKey(chart)) {
             return chartReleaseMappings.get(chart).contains(release);
         } else {
