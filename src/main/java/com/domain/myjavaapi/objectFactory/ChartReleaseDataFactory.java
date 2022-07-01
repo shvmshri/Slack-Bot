@@ -33,7 +33,7 @@ public class ChartReleaseDataFactory {
     private void storeDataInMap(String chartReleaseInfo) {
         try {
             // Just to test
-            // chartReleaseInfo = "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}";
+             chartReleaseInfo = "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}";
             Map<String, Map<String, List<String>>> map = new Gson().fromJson(chartReleaseInfo, new TypeToken<HashMap<String, Map<String, List<String>>>>() {
             }.getType());
             for (Map.Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
@@ -87,7 +87,8 @@ public class ChartReleaseDataFactory {
 
     public boolean validateChartRelease(String chart, String release) {
         chartReleaseMappings.clear();
-        fetchChartReleaseData();
+        //fetchChartReleaseData();
+        storeDataInMap("hi");
         if (chartReleaseMappings.containsKey(chart)) {
             return chartReleaseMappings.get(chart).contains(release);
         } else {
