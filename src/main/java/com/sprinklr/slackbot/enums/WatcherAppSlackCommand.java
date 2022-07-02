@@ -1,7 +1,5 @@
 package com.sprinklr.slackbot.enums;
 
-import com.sprinklr.slackbot.util.WatcherAppMessageConstants;
-
 public enum WatcherAppSlackCommand {
     ADD_WATCHER("/watch", 3),
     REMOVE_WATCHER("/unwatch", 2),
@@ -24,6 +22,5 @@ public enum WatcherAppSlackCommand {
     public int getNumArgs() {
         return numArgs;
     }
-
 
 }

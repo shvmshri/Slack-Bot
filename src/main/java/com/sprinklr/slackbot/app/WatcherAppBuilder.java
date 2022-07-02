@@ -17,27 +17,6 @@ public class WatcherAppBuilder {
     @Autowired
     private WatcherCommandService watcherCommandService;
 
-
-    public void addAndConfigureCommands(App app) {
-        for (WatcherAppSlackCommand watcherAppSlackCommand : WatcherAppSlackCommand.values()) {
-            app.command(watcherAppSlackCommand.getCommand(), (req, ctx) -> {
-
-                String commandArgText = req.getPayload().getText();
-                if (Utils.numArgs(commandArgText) != watcherAppSlackCommand.getNumArgs()) {
-                    return ctx.ack(WatcherAppMessageConstants.INVALID_ARGS_NUM);
-                }
-
-                String userId = req.getPayload().getUserId();
-                User user = ctx.client().usersInfo(r -> r.token(ctx.getBotToken()).user(userId)).getUser();
-
-                String message = callSlackService(watcherAppSlackCommand, commandArgText, user);
-
-                return ctx.ack(message);
-
-            });
-        }
-    }
-
     private String callSlackService(WatcherAppSlackCommand watcherAppSlackCommand, String commandArgText, User user) {
         switch (watcherAppSlackCommand) {
 
@@ -60,4 +39,25 @@ public class WatcherAppBuilder {
                 return null;
         }
     }
+
+    public void addAndConfigureCommands(App app) {
+        for (WatcherAppSlackCommand watcherAppSlackCommand : WatcherAppSlackCommand.values()) {
+            app.command(watcherAppSlackCommand.getCommand(), (req, ctx) -> {
+
+                String commandArgText = req.getPayload().getText();
+                if (Utils.numArgs(commandArgText) != watcherAppSlackCommand.getNumArgs()) {
+                    return ctx.ack(WatcherAppMessageConstants.INVALID_ARGS_NUM);
+                }
+
+                String userId = req.getPayload().getUserId();
+                User user = ctx.client().usersInfo(r -> r.token(ctx.getBotToken()).user(userId)).getUser();
+
+                String message = callSlackService(watcherAppSlackCommand, commandArgText, user);
+
+                return ctx.ack(message);
+
+            });
+        }
+    }
+
 }

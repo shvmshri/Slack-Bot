@@ -19,7 +19,7 @@ public class Utils {
 
         if ((duration.length() - 1) > 0) {
             try {
-                int timeInt = Integer.parseInt(duration.substring(0, duration.length() - 1));
+                double timeDouble = Double.parseDouble(duration.substring(0, duration.length() - 1));
                 char last = duration.charAt(duration.length() - 1);
                 return (last == 'H' || last == 'h' || last == 'M' || last == 'm');
             } catch (Exception e) {
@@ -41,11 +41,11 @@ public class Utils {
         calendar.setTime(date);
 
         char lastChar = duration.charAt(duration.length() - 1);
-        int timeInt = Integer.parseInt(duration.substring(0, duration.length() - 1));
+        double timeDouble = Double.parseDouble(duration.substring(0, duration.length() - 1));
         if (lastChar == 'h' || lastChar == 'H') {
-            calendar.add(Calendar.HOUR_OF_DAY, timeInt);
+            calendar.add(Calendar.MINUTE, (int) Math.round(timeDouble * 60));
         } else {
-            calendar.add(Calendar.MINUTE, timeInt);
+            calendar.add(Calendar.SECOND, (int) Math.round(timeDouble * 60));
         }
 
         return calendar.getTime();

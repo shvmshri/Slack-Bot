@@ -2,6 +2,7 @@ package com.sprinklr.slackbot.factory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.sprinklr.slackbot.util.AppProperties;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -23,7 +24,6 @@ public class ChartReleaseDataFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChartReleaseDataFactory.class);
     private static final String ENDPOINT = "https://qa4-red-int.sprinklr.com/internal/api/v1/fetchModulesInfoForGivenRepo";
     private static final String HEADER = "X-Red-Api-Token";
-    private static final String TOKEN = "token";
     private static final String K8S = "k8s";
     private static final String PARAM_NAME = "repo";
     private static final ConcurrentHashMap<String, List<String>> chartReleaseMappings = new ConcurrentHashMap<String, List<String>>();
@@ -47,7 +47,7 @@ public class ChartReleaseDataFactory {
     private HttpRequestBase getRequestwithParam(String paramValue) {
 
         HttpRequestBase request = new HttpGet();
-        request.setHeader(HEADER, TOKEN);
+        request.setHeader(HEADER, AppProperties.RED_INTERNAL_API_TOKEN);
 
         try {
             URIBuilder uriBuilder = new URIBuilder(ENDPOINT);

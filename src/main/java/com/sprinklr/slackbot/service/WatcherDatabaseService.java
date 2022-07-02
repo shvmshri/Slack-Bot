@@ -28,6 +28,7 @@ public class WatcherDatabaseService {
         Predicate<Watcher> chartNameCheck = w -> Objects.equals(w.getChartName(), chart);
         Predicate<Watcher> releaseNameCheck = w -> Objects.equals(w.getReleaseName(), release);
 
+
         return demoDatabase.stream().filter(chartNameCheck.and(releaseNameCheck)).map(Watcher::getUserId).collect(Collectors.toList());
 
 //        Criteria criteria = new Criteria();
