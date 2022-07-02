@@ -20,7 +20,7 @@ public class SlackMessageDispatcher {
 
         MethodsClient client = Slack.getInstance().methods();
         try {
-            String text = "Hey <@userId>, " + message;
+            String text = "Hey <@" + userId + ">, " + message;
             ChatPostMessageResponse result = client.chatPostMessage((r -> r.token(SLACK_BOT_TOKEN).channel(userId).text(text)));
             if (!result.isOk()) {
                 LOGGER.error("Could not send message to user on slack");
