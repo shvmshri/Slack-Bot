@@ -9,13 +9,13 @@ import org.slf4j.LoggerFactory;
 public class SlackUtil {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(SlackUtil.class);
-    public static String SLACK_BOT_TOKEN = "";
+
     public static String findSlackUserId(String userEmail) {
 
         MethodsClient client = Slack.getInstance().methods();
         String userSlackId = null;
         try {
-            UsersLookupByEmailResponse user = client.usersLookupByEmail((r -> r.token(SLACK_BOT_TOKEN).email(userEmail)));
+            UsersLookupByEmailResponse user = client.usersLookupByEmail((r -> r.token(AppProperties.SLACK_BOT_TOKEN).email(userEmail)));
             userSlackId = user.getUser().getId();
 
         } catch (Exception e) {

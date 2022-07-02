@@ -13,9 +13,9 @@ import org.springframework.stereotype.Service;
 @Service
 public class WatcherAppBuilder {
 
+    private static final String HELP = "help";
     @Autowired
     private WatcherCommandService watcherCommandService;
-    private static final String HELP = "help";
 
 
     public void addAndConfigureCommands(App app) {
@@ -48,7 +48,7 @@ public class WatcherAppBuilder {
                 return watcherCommandService.handleUnwatchCommand(commandArgText, user.getId());
 
             case WATCHERS_LIST:
-                return watcherCommandService.handleWatcherListCommand(commandArgText, user.getId());
+                return watcherCommandService.handleWatcherListCommand(commandArgText);
 
             case HELP:
                 if (!commandArgText.equalsIgnoreCase(HELP)) {

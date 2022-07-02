@@ -47,9 +47,9 @@ public class WatcherDatabaseService {
 //        return userIds;
     }
 
-    public void addWatcherInfo(String chart, String release, String time, String userId, String userEmail) throws Exception {
+    public void addWatcherInfo(String chart, String release, String duration, String userId, String userEmail) throws Exception {
 
-        Watcher watcher = new Watcher(chart, release, time, userId, userEmail);
+        Watcher watcher = new Watcher(chart, release, duration, userId, userEmail);
 
         Predicate<Watcher> chartNameCheck = w -> Objects.equals(w.getChartName(), chart);
         Predicate<Watcher> releaseNameCheck = w -> Objects.equals(w.getReleaseName(), release);
@@ -94,24 +94,24 @@ public class WatcherDatabaseService {
     }
 
     //When someone Asks for number of watchers
-    public List<Watcher> getWatcherUserEmails(String chart, String release, String userId) throws Exception {
-
-        Predicate<Watcher> chartNameCheck = w -> Objects.equals(w.getChartName(), chart);
-        Predicate<Watcher> releaseNameCheck = w -> Objects.equals(w.getReleaseName(), release);
-
-        return demoDatabase.stream().filter(chartNameCheck.and(releaseNameCheck)).collect(Collectors.toList());
-
-//        Criteria criteria = new Criteria();
-//        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
+//    public List<Watcher> getWatcherUserEmails(String chart, String release, String userId) throws Exception {
 //
-//        Query query = new Query(criteria);
-//        query.fields().include(Watcher.USER_EMAIL);
+//        Predicate<Watcher> chartNameCheck = w -> Objects.equals(w.getChartName(), chart);
+//        Predicate<Watcher> releaseNameCheck = w -> Objects.equals(w.getReleaseName(), release);
 //
-////        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
+//        return demoDatabase.stream().filter(chartNameCheck.and(releaseNameCheck)).collect(Collectors.toList());
 //
-//        return mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
-
-    }
+////        Criteria criteria = new Criteria();
+////        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
+////
+////        Query query = new Query(criteria);
+////        query.fields().include(Watcher.USER_EMAIL);
+////
+//////        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
+////
+////        return mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
+//
+//    }
 
     public boolean searchAWatcher(String chart, String release, String userId) throws Exception {
 

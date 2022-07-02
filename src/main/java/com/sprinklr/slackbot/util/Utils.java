@@ -15,33 +15,33 @@ public class Utils {
 
     }
 
-    public static boolean checkTimeFormat(String time){
+    public static boolean checkTimeFormat(String duration) {
 
-        if ((time.length()-1) > 0) {
-            try{
-                int timeInt =   Integer.parseInt(time.substring(0, time.length() - 1));
-                char last = time.charAt(time.length() - 1);
+        if ((duration.length() - 1) > 0) {
+            try {
+                int timeInt = Integer.parseInt(duration.substring(0, duration.length() - 1));
+                char last = duration.charAt(duration.length() - 1);
                 return (last == 'H' || last == 'h' || last == 'M' || last == 'm');
-            } catch(Exception e){
+            } catch (Exception e) {
                 return false;
             }
         } else {
-           return false;
+            return false;
         }
 
     }
 
-    public static Date findExpireDate(String time) {
+    public static Date findExpireDate(String duration) {
 
-        if(!checkTimeFormat(time)){
+        if (!checkTimeFormat(duration)) {
             return new Date();
         }
         Date date = new Date();
         Calendar calendar = Calendar.getInstance();
         calendar.setTime(date);
 
-        char lastChar = time.charAt(time.length()-1);
-        int timeInt = Integer.parseInt(time.substring(0,time.length()-1));
+        char lastChar = duration.charAt(duration.length() - 1);
+        int timeInt = Integer.parseInt(duration.substring(0, duration.length() - 1));
         if (lastChar == 'h' || lastChar == 'H') {
             calendar.add(Calendar.HOUR_OF_DAY, timeInt);
         } else {

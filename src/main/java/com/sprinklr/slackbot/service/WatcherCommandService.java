@@ -30,18 +30,18 @@ public class WatcherCommandService {
         StringTokenizer tokens = new StringTokenizer(commandArg);
         String chart = tokens.nextToken();
         String release = tokens.nextToken();
-        String time = tokens.nextToken();
+        String duration = tokens.nextToken();
 
         if (!chartReleaseDataFactory.validateChartRelease(chart, release)) {
             return WatcherAppMessageConstants.INVALID_ARGS_VALUE;
         }
-        if (!Utils.checkTimeFormat(time)) {
+        if (!Utils.checkTimeFormat(duration)) {
             return WatcherAppMessageConstants.INVALID_TIME;
         }
 
         try {
 
-            watcherDBService.addWatcherInfo(chart, release, time, userId, userEmail);
+            watcherDBService.addWatcherInfo(chart, release, duration, userId, userEmail);
             return WatcherAppMessageConstants.SUCCESS_WATCH;
 
         } catch (Exception e) {
@@ -81,7 +81,7 @@ public class WatcherCommandService {
 
     }
 
-    public String handleWatcherListCommand(String commandArg, String userId) {
+    public String handleWatcherListCommand(String commandArg) {
 
         StringTokenizer tokens = new StringTokenizer(commandArg);
         String chart = tokens.nextToken();
@@ -93,23 +93,20 @@ public class WatcherCommandService {
 
         try {
 
-            List<Watcher> watcherList = watcherDBService.getWatcherUserEmails(chart, release, userId);
-            ArrayList<String> userEmails = new ArrayList<String>();
+            List<String> userIds = watcherDBService.getWatcherUserIds(chart, release);
 
-            for (Watcher watcher : watcherList) {
-                userEmails.add(watcher.getUserEmail());
+            String message = WatcherAppMessageConstants.WATCHERS_LIST + "Chart `" + chart + "`\nRelease `" + release + "`\nWatchers";
+            for (String userId : userIds) {
+                message = message + " <@" + userId + ">";
             }
 
-            String message = WatcherAppMessageConstants.WATCHERS_LIST;
-            for (String userEmail : userEmails) {
-                message = message + ", " + userEmail;
+            if (userIds.isEmpty()) {
+                message = WatcherAppMessageConstants.NO_WATCHERS;
             }
-
-            if (userEmails.isEmpty()) message = WatcherAppMessageConstants.NO_WATCHERS;
             return message;
 
         } catch (Exception e) {
-            LOGGER.error("Error occurred in database server while fetching watcher information.", e);
+            LOGGER.error("Error occurred in database server while fetching watcher's information.", e);
             return WatcherAppMessageConstants.FAILURE;
         }
 
