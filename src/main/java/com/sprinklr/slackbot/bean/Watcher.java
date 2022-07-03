@@ -1,6 +1,6 @@
-package com.domain.myjavaapi.models;
+package com.sprinklr.slackbot.bean;
 
-import com.domain.myjavaapi.utility.Utils;
+import com.sprinklr.slackbot.util.Utils;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
@@ -13,7 +13,7 @@ public class Watcher {
     public static String RELEASE_NAME = "releaseName";
     public static String USER_ID = "userId";
     public static String USER_EMAIL = "userEmail";
-    public static String TIME = "time";
+    public static String DURATION = "duration";
     public static String EXPIRE_AT = "expireAt";
     public static String COLLECTION = "Watcher";
 
@@ -23,7 +23,7 @@ public class Watcher {
     private String releaseName;
     private String userId;
     private String userEmail;
-    private String time;
+    private String duration;
 
     private Date expireAt;
 
@@ -31,13 +31,13 @@ public class Watcher {
     public Watcher() {
     }
 
-    public Watcher(String chart, String release, String time, String userId, String userEmail) {
+    public Watcher(String chart, String release, String duration, String userId, String userEmail) {
         this.chartName = chart;
         this.releaseName = release;
-        this.time = time;
+        this.duration = duration;
         this.userId = userId;
         this.userEmail = userEmail;
-        this.expireAt = Utils.findExpireDate(time);
+        this.expireAt = Utils.findExpireDate(duration);
     }
 
 
@@ -81,12 +81,12 @@ public class Watcher {
         this.userEmail = userEmail;
     }
 
-    public String getTime() {
-        return time;
+    public String getDuration() {
+        return duration;
     }
 
-    public void setTime(String time) {
-        this.time = time;
+    public void setDuration(String duration) {
+        this.duration = duration;
     }
 
     public Date getExpireAt() {

@@ -1,7 +1,8 @@
-package com.domain.myjavaapi.objectFactory;
+package com.sprinklr.slackbot.factory;
 
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
+import com.sprinklr.slackbot.util.AppProperties;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpRequestBase;
@@ -23,7 +24,6 @@ public class ChartReleaseDataFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChartReleaseDataFactory.class);
     private static final String ENDPOINT = "https://qa4-red-int.sprinklr.com/internal/api/v1/fetchModulesInfoForGivenRepo";
     private static final String HEADER = "X-Red-Api-Token";
-    private static final String TOKEN = "token";
     private static final String K8S = "k8s";
     private static final String PARAM_NAME = "repo";
     private static final ConcurrentHashMap<String, List<String>> chartReleaseMappings = new ConcurrentHashMap<String, List<String>>();
@@ -40,14 +40,14 @@ public class ChartReleaseDataFactory {
                 chartReleaseMappings.put(entry.getKey(), entry.getValue().get(K8S));
             }
         } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error while using GSON to convert JSON string to map");
+            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error while using GSON to convert JSON string to map", e);
         }
     }
 
     private HttpRequestBase getRequestwithParam(String paramValue) {
 
         HttpRequestBase request = new HttpGet();
-        request.setHeader(HEADER, TOKEN);
+        request.setHeader(HEADER, AppProperties.RED_INTERNAL_API_TOKEN);
 
         try {
             URIBuilder uriBuilder = new URIBuilder(ENDPOINT);
@@ -56,7 +56,7 @@ public class ChartReleaseDataFactory {
             assert request != null;
             request.setURI(uri);
         } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error occurred due to the attempt of using invalid URL to fetch data about chartNames and ReleaseNames for the repository = " + paramValue);
+            LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error occurred due to the attempt of using invalid URL to fetch data about chartNames and ReleaseNames for the repository = " + paramValue, e);
         }
 
         return request;
@@ -72,7 +72,7 @@ public class ChartReleaseDataFactory {
                 String result = EntityUtils.toString(httpResponse.getEntity());
                 storeDataInMap(result);
             } catch (Exception e) {
-                LOGGER.error("[ChartReleaseDataCache_CRITICAL] Error occurred while executing request of fetching data from red API regarding chart and release details for repositry " + repo);
+                LOGGER.error("[ChartReleaseDataCache_CRITICAL] Error occurred while executing request of fetching data from red API regarding chart and release details for repositry " + repo, e);
             }
 
         }
@@ -80,7 +80,7 @@ public class ChartReleaseDataFactory {
         try {
             httpclient.close();
         } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error occurred while closing Http Client");
+            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error occurred while closing Http Client", e);
         }
 
     }
@@ -88,6 +88,7 @@ public class ChartReleaseDataFactory {
     public boolean validateChartRelease(String chart, String release) {
         chartReleaseMappings.clear();
         fetchChartReleaseData();
+        //storeDataInMap("j");
         if (chartReleaseMappings.containsKey(chart)) {
             return chartReleaseMappings.get(chart).contains(release);
         } else {

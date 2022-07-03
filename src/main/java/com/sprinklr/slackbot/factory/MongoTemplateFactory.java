@@ -1,11 +1,11 @@
-package com.domain.myjavaapi.objectFactory;
+package com.sprinklr.slackbot.factory;
 
-import com.domain.myjavaapi.enums.ServerType;
-import com.domain.myjavaapi.models.MongoServerInfo;
 import com.mongodb.ConnectionString;
 import com.mongodb.MongoClientSettings;
 import com.mongodb.client.MongoClient;
 import com.mongodb.client.MongoClients;
+import com.sprinklr.slackbot.bean.MongoServerInfo;
+import com.sprinklr.slackbot.enums.ServerType;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.mongodb.core.MongoTemplate;
 import org.springframework.data.mongodb.core.index.Index;
@@ -52,26 +52,26 @@ public class MongoTemplateFactory {
 
     }
 
-    public MongoTemplate getGlobalMongoTemplate() {
-
-        mongoTemplateMappings.putIfAbsent(ServerType.GLOBAL,mongoTemplate(GLOBAL_MONGO_URI, GLOBAL_DATABASE));
-        return mongoTemplateMappings.get(ServerType.GLOBAL);
-
-    }
-
     private MongoTemplate initApplicationMongoTemplate(ServerType serverType) {
 
         MongoTemplate globalMongoTemplate = getGlobalMongoTemplate();
-        MongoServerInfo mongoServerInfoInfo = getMongoServerInfo(globalMongoTemplate,serverType);
+        MongoServerInfo mongoServerInfoInfo = getMongoServerInfo(globalMongoTemplate, serverType);
         MongoTemplate applicationMongoTemplate = mongoTemplate(mongoServerInfoInfo.getUrl(), mongoServerInfoInfo.getDbName());
         applicationMongoTemplate.indexOps(APPLICATION_COLLECTION_NAME).ensureIndex(new Index().expire(0).on("expireAt", Sort.Direction.ASC));
         return applicationMongoTemplate;
 
     }
 
+    public MongoTemplate getGlobalMongoTemplate() {
+
+        mongoTemplateMappings.putIfAbsent(ServerType.GLOBAL, mongoTemplate(GLOBAL_MONGO_URI, GLOBAL_DATABASE));
+        return mongoTemplateMappings.get(ServerType.GLOBAL);
+
+    }
+
     public MongoTemplate getApplicationMongoTemplate(ServerType serverType) {
 
-        mongoTemplateMappings.putIfAbsent(serverType,initApplicationMongoTemplate(serverType));
+        mongoTemplateMappings.putIfAbsent(serverType, initApplicationMongoTemplate(serverType));
         return mongoTemplateMappings.get(serverType);
 
     }

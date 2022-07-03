@@ -1,4 +1,4 @@
-package com.domain.myjavaapi.models;
+package com.sprinklr.slackbot.bean;
 
 public class JenkinsJobInfo {
 

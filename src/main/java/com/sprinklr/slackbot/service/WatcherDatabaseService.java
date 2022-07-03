@@ -1,9 +1,9 @@
-package com.domain.myjavaapi.services;
+package com.sprinklr.slackbot.service;
 
-import com.domain.myjavaapi.enums.ServerType;
-import com.domain.myjavaapi.models.Watcher;
-import com.domain.myjavaapi.objectFactory.MongoTemplateFactory;
 import com.mongodb.client.result.DeleteResult;
+import com.sprinklr.slackbot.bean.Watcher;
+import com.sprinklr.slackbot.enums.ServerType;
+import com.sprinklr.slackbot.factory.MongoTemplateFactory;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,6 +14,7 @@ import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.stereotype.Service;
 
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
 
 @Service
@@ -24,10 +25,11 @@ public class WatcherDatabaseService {
     @Autowired
     private MongoTemplateFactory templateFactory;
 
-    public ArrayList<String> getWatcherUserIds(String chart, String release) throws Exception {
+    public List<String> getWatcherUserIds(String chart, String release) throws Exception {
 
         Criteria criteria = new Criteria();
         criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
+        criteria = criteria.and(Watcher.EXPIRE_AT).gte(new Date());
 
         Query query = new Query(criteria);
         query.fields().include(Watcher.USER_ID);
@@ -72,21 +74,6 @@ public class WatcherDatabaseService {
 
         DeleteResult result = mongoTemplate.remove(query, Watcher.class, Watcher.COLLECTION);
         return (result.getDeletedCount() != 0);
-
-    }
-
-    //When someone Asks for number of watchers
-    public List<Watcher> getWatcherUserEmails(String chart, String release, String userId) throws Exception {
-
-        Criteria criteria = new Criteria();
-        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.RELEASE_NAME).is(release));
-
-        Query query = new Query(criteria);
-        query.fields().include(Watcher.USER_EMAIL);
-
-        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
-
-        return mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
 
     }
 
