@@ -45,9 +45,28 @@ public class WatcherDatabaseService {
         return userIds;
     }
 
-    public void addWatcherInfo(String chart, String release, String time, String userId, String userEmail) throws Exception {
+    public List<String> getWatcherUserIds(String chart) throws Exception {
 
-        Watcher watcher = new Watcher(chart, release, time, userId, userEmail);
+        Criteria criteria = new Criteria();
+        criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(chart), Criteria.where(Watcher.EXPIRE_AT).gte(new Date()));
+
+        Query query = new Query(criteria);
+        query.fields().include(Watcher.USER_ID);
+
+        MongoTemplate mongoTemplate = templateFactory.getApplicationMongoTemplate(ServerType.SLACK_BOT);
+
+        List<Watcher> watcherList = mongoTemplate.find(query, Watcher.class, Watcher.COLLECTION);
+        ArrayList<String> userIds = new ArrayList<String>();
+        for (Watcher watcher : watcherList) {
+            userIds.add(watcher.getUserId());
+        }
+
+        return userIds;
+    }
+
+    public void addWatcherInfo(String chart, String release, String time, String userId) throws Exception {
+
+        Watcher watcher = new Watcher(chart, release, time, userId);
 
         Criteria criteria = new Criteria();
         criteria.andOperator(Criteria.where(Watcher.CHART_NAME).is(watcher.getChartName()), Criteria.where(Watcher.RELEASE_NAME).is(watcher.getReleaseName()));

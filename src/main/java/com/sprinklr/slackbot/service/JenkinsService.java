@@ -24,7 +24,13 @@ public class JenkinsService {
         String message = "A build is invoked by <@" + userId + "> on \nChart `" + chart + "`\nRelease `" + release + "`\nJob `" + jobLink + "`";
 
         try {
-            List<String> userIDList = watcherDBService.getWatcherUserIds(chart, release);
+            List<String> userIDList;
+            if (release.equals("all")) {
+                userIDList = watcherDBService.getWatcherUserIds(chart);
+            } else {
+                userIDList = watcherDBService.getWatcherUserIds(chart, release);
+            }
+
             try {
                 userIDList.remove(userId);
             } catch (Exception e) {
@@ -48,22 +54,24 @@ public class JenkinsService {
         handleNotifyUsers(chart, release, userId, jobLink);
 
 
-        if (userId == null) {
-            LOGGER.error("[JenkinsService_CRITICAL] The user triggering build is not present in Slack Workspace. Hence, can't add the Jenkins User as a Watcher");
-            return;
-        }
+        //To add Jenkins user as a watcher for default time
 
-        try {
-            if (!watcherDBService.searchAWatcher(chart, release, userId)) {
-                try {
-                    watcherDBService.addWatcherInfo(chart, release, DEFAULT_TIME, userId, userEmail);
-                } catch (Exception e) {
-                    LOGGER.error("Error occurred in database server while inserting Jenkins build invoker as a Watcher", e);
-                }
-            }
-        } catch (Exception ex) {
-            LOGGER.error("Error occurred while searching Jenkins build invoker in database server ", ex);
-        }
+//        if (userId == null) {
+//            LOGGER.error("[JenkinsService_CRITICAL] The user triggering build is not present in Slack Workspace. Hence, can't add the Jenkins User as a Watcher");
+//            return;
+//        }
+//
+//        try {
+//            if (!watcherDBService.searchAWatcher(chart, release, userId)) {
+//                try {
+//                    watcherDBService.addWatcherInfo(chart, release, DEFAULT_TIME, userId);
+//                } catch (Exception e) {
+//                    LOGGER.error("Error occurred in database server while inserting Jenkins build invoker as a Watcher", e);
+//                }
+//            }
+//        } catch (Exception ex) {
+//            LOGGER.error("Error occurred while searching Jenkins build invoker in database server ", ex);
+//        }
 
     }
 

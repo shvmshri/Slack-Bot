@@ -1,63 +1,199 @@
 package com.sprinklr.slackbot.app;
 
+import com.google.gson.Gson;
+import com.google.gson.reflect.TypeToken;
 import com.slack.api.bolt.App;
-import com.slack.api.model.User;
+import com.slack.api.methods.response.views.ViewsOpenResponse;
+import com.slack.api.model.block.InputBlock;
+import com.slack.api.model.block.LayoutBlock;
+import com.slack.api.model.view.View;
+import com.slack.api.model.view.ViewState;
 import com.sprinklr.slackbot.enums.WatcherAppSlackCommand;
+import com.sprinklr.slackbot.service.SlackMessageDispatcher;
 import com.sprinklr.slackbot.service.WatcherCommandService;
-import com.sprinklr.slackbot.util.Utils;
 import com.sprinklr.slackbot.util.WatcherAppMessageConstants;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
+import java.lang.reflect.Type;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
+
+import static com.slack.api.model.block.Blocks.*;
+import static com.slack.api.model.block.composition.BlockCompositions.markdownText;
+import static com.slack.api.model.block.composition.BlockCompositions.plainText;
+import static com.slack.api.model.block.element.BlockElements.*;
+import static com.slack.api.model.view.Views.*;
 
 @Service
 public class WatcherAppBuilder {
 
-    private static final String HELP = "help";
-    @Autowired
-    private WatcherCommandService watcherCommandService;
+    private static final Logger LOGGER = LoggerFactory.getLogger(WatcherAppBuilder.class);
+    private static final String MODAL = "modal";
+    private static final String PLAIN_TEXT = "plain_text";
+    private static final String SUBMIT = "Submit";
+    private static final String CANCEL = "Cancel";
+    private static final String DURATION = "DURATION";
+    private static final String DURATION_BLOCK = "DURATION_BLOCK";
+    private static final String CHART_NAME = "chartName";
+    private static final Gson gson = new Gson();
 
-    private String callSlackService(WatcherAppSlackCommand watcherAppSlackCommand, String commandArgText, User user) {
+    @Autowired
+    SlackMessageDispatcher slackMessageDispatcher;
+    @Autowired
+    WatcherCommandService watcherCommandService;
+
+    public void addAndConfigureCommands(App app) {
+
+        for (WatcherAppSlackCommand watcherAppSlackCommand : WatcherAppSlackCommand.values()) {
+            //receive the command request and present the view to the slack user
+            setCommand(app, watcherAppSlackCommand);
+
+            //receive the submission of individual block actions (external data select fields)
+            setBlockActions(app, watcherAppSlackCommand);
+
+            //receive the submission of the view and extract the useful fields
+            setViewSubmission(app, watcherAppSlackCommand);
+
+            //receive "view closed" request and send some message to the slack user
+            setViewClosed(app, watcherAppSlackCommand);
+        }
+
+    }
+
+    private void setCommand(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
+
+        app.command(watcherAppSlackCommand.getCommand(), (req, ctx) -> {
+            Map<String, String> metadata = new HashMap<>();
+            ViewsOpenResponse viewsOpenRes = ctx.client().viewsOpen(r -> r
+                    .triggerId(ctx.getTriggerId())
+                    .view(buildView(gson.toJson(metadata), watcherAppSlackCommand)));
+            if (viewsOpenRes.isOk()) {
+                return ctx.ack();
+            } else {
+                LOGGER.error("Could not open the view. Error:- " + viewsOpenRes.getError());
+                return ctx.ack(WatcherAppMessageConstants.FAILURE);
+            }
+        });
+
+    }
+
+    private View buildView(String privateMetadata, WatcherAppSlackCommand watcherAppSlackCommand) {
+        InputBlock durationBlock = input(input -> input
+                .blockId(DURATION_BLOCK)
+                .element(plainTextInput(pti -> pti.actionId(DURATION).placeholder(plainText("Enter duration to watch"))))
+                .label(plainText(pt -> pt.text("Duration(in hours)")))
+        );
+
+        ArrayList<LayoutBlock> viewBlocks = new ArrayList<>();
+        viewBlocks.add(section(section -> section
+                .text(markdownText("Fill in the necessary details"))));
+        viewBlocks.add(section(section -> section
+                .text(markdownText("*Chart Name*"))));
+        viewBlocks.add(actions(actionsBlockBuilder -> actionsBlockBuilder
+                .blockId(watcherAppSlackCommand.getChartBlock())
+                .elements(asElements(externalSelect(externalSelectElementBuilder -> externalSelectElementBuilder
+                        .actionId(watcherAppSlackCommand.getChart())
+                        .placeholder(plainText("Select the chart name"))
+                        .minQueryLength(0)
+                )))
+        ));
+        viewBlocks.add(input(inputBlockBuilder -> inputBlockBuilder
+                .blockId(watcherAppSlackCommand.getReleaseBlock())
+                .element(multiExternalSelect(multiExternalSelectElementBuilder -> multiExternalSelectElementBuilder
+                        .actionId(watcherAppSlackCommand.getRelease())
+                        .placeholder(plainText("Select the release names"))
+                        .minQueryLength(0)
+                ))
+                .label(plainText("Release Names"))
+        ));
+
+        if (watcherAppSlackCommand.equals(WatcherAppSlackCommand.ADD_WATCHER)) {
+            viewBlocks.add(durationBlock);
+        }
+
+        return view(view -> view
+                .callbackId(watcherAppSlackCommand.getView())
+                .type(MODAL)
+                .notifyOnClose(true)
+                .title(viewTitle(title -> title.type(PLAIN_TEXT).text(watcherAppSlackCommand.getTitle())))
+                .submit(viewSubmit(submit -> submit.type(PLAIN_TEXT).text(SUBMIT)))
+                .close(viewClose(close -> close.type(PLAIN_TEXT).text(CANCEL)))
+                .privateMetadata(privateMetadata)
+                .blocks(viewBlocks)
+
+        );
+    }
+
+    private void setBlockActions(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
+
+        app.blockAction(watcherAppSlackCommand.getChart(), (req, ctx) -> {
+            Type mapType = new TypeToken<Map<String, String>>() {
+            }.getType();
+            Map<String, String> metadata = gson.fromJson(req.getPayload().getView().getPrivateMetadata(), mapType);
+            System.out.println(req.getPayload().getView().getState().getValues().get(watcherAppSlackCommand.getChartBlock()).get(watcherAppSlackCommand.getChart()).getSelectedOption().getText().getText());
+
+            metadata.put(CHART_NAME,
+                    req.getPayload().getView().getState().getValues().get(watcherAppSlackCommand.getChartBlock()).get(watcherAppSlackCommand.getChart()).getSelectedOption().getText().getText());
+            ctx.client().viewsUpdate(r -> r.viewId(req.getPayload().getView().getId())
+                    .hash(req.getPayload().getView().getHash())
+                    .view(buildView(gson.toJson(metadata), watcherAppSlackCommand))
+            );
+            return ctx.ack();
+        });
+
+    }
+
+    private void setViewSubmission(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
+        app.viewSubmission(watcherAppSlackCommand.getView(), (req, ctx) -> {
+            String userId = req.getPayload().getUser().getId();
+            Map<String, Map<String, ViewState.Value>> map = req.getPayload().getView().getState().getValues();
+            List<ViewState.SelectedOption> releases = map.get(watcherAppSlackCommand.getReleaseBlock()).get(watcherAppSlackCommand.getRelease()).getSelectedOptions();
+
+            app.executorService().submit(() -> {
+                for (ViewState.SelectedOption release : releases) {
+                    callSlackService(watcherAppSlackCommand, userId, map, release.getText().getText());
+                }
+                System.out.println(userId);
+            });
+
+            return ctx.ack();
+        });
+    }
+
+
+    private void callSlackService(WatcherAppSlackCommand watcherAppSlackCommand, String userId, Map<String, Map<String, ViewState.Value>> map, String release) {
+        String chart = map.get(watcherAppSlackCommand.getChartBlock()).get(watcherAppSlackCommand.getChart()).getSelectedOption().getText().getText();
+        String message;
         switch (watcherAppSlackCommand) {
 
             case ADD_WATCHER:
-                return watcherCommandService.handleWatchCommand(commandArgText, user.getId(), user.getProfile().getEmail());
+                String duration = map.get(DURATION_BLOCK).get(DURATION).getValue();
+                message = watcherCommandService.handleWatchCommand(chart, release, duration, userId);
+                slackMessageDispatcher.sendMessage(userId, message);
+                break;
 
             case REMOVE_WATCHER:
-                return watcherCommandService.handleUnwatchCommand(commandArgText, user.getId());
+                message = watcherCommandService.handleUnwatchCommand(chart, release, userId);
+                slackMessageDispatcher.sendMessage(userId, message);
+                break;
 
             case WATCHERS_LIST:
-                return watcherCommandService.handleWatcherListCommand(commandArgText);
-
-            case HELP:
-                if (!commandArgText.equalsIgnoreCase(HELP)) {
-                    return WatcherAppMessageConstants.INVALID_ARGS;
-                }
-                return WatcherAppMessageConstants.HELP_TEXT;
+                message = watcherCommandService.handleWatcherListCommand(chart, release);
+                slackMessageDispatcher.sendMessage(userId, message);
+                break;
 
             default:
-                return null;
+                break;
+
         }
     }
 
-    public void addAndConfigureCommands(App app) {
-        for (WatcherAppSlackCommand watcherAppSlackCommand : WatcherAppSlackCommand.values()) {
-            app.command(watcherAppSlackCommand.getCommand(), (req, ctx) -> {
-
-                String commandArgText = req.getPayload().getText();
-                if (Utils.numArgs(commandArgText) != watcherAppSlackCommand.getNumArgs()) {
-                    return ctx.ack(WatcherAppMessageConstants.INVALID_ARGS_NUM);
-                }
-
-                String userId = req.getPayload().getUserId();
-                User user = ctx.client().usersInfo(r -> r.token(ctx.getBotToken()).user(userId)).getUser();
-
-                String message = callSlackService(watcherAppSlackCommand, commandArgText, user);
-
-                return ctx.ack(message);
-
-            });
-        }
+    private void setViewClosed(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
+        app.viewClosed(watcherAppSlackCommand.getView(), (req, ctx) -> ctx.ack());
     }
-
 }

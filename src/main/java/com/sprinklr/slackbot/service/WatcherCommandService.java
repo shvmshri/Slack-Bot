@@ -23,71 +23,47 @@ public class WatcherCommandService {
     private WatcherDatabaseService watcherDBService;
 
 
-    public String handleWatchCommand(String commandArg, String userId, String userEmail) {
+    public String handleWatchCommand(String chart, String release, String duration, String userId) {
 
-        StringTokenizer tokens = new StringTokenizer(commandArg);
-        String chart = tokens.nextToken();
-        String release = tokens.nextToken();
-        String duration = tokens.nextToken();
-
-        if (!chartReleaseDataFactory.validateChartRelease(chart, release)) {
-            return WatcherAppMessageConstants.INVALID_ARGS_VALUE;
-        }
         if (!Utils.checkTimeFormat(duration)) {
             return WatcherAppMessageConstants.INVALID_TIME;
         }
 
         try {
 
-            watcherDBService.addWatcherInfo(chart, release, duration, userId, userEmail);
-            return WatcherAppMessageConstants.SUCCESS_WATCH;
+            watcherDBService.addWatcherInfo(chart, release, duration, userId);
+            return WatcherAppMessageConstants.SUCCESS_WATCH + "\nChart `" + chart + "`\nRelease `" + release + "`\n";
 
         } catch (Exception e) {
 
             LOGGER.error("Error occurred in database server while inserting watcher information.", e);
-            return WatcherAppMessageConstants.FAILURE;
+            return WatcherAppMessageConstants.FAILURE + "\nChart `" + chart + "`\nRelease `" + release + "`\n";
 
         }
 
     }
 
-    public String handleUnwatchCommand(String commandArg, String userId) {
-
-        StringTokenizer tokens = new StringTokenizer(commandArg);
-        String chart = tokens.nextToken();
-        String release = tokens.nextToken();
-
-        if (!chartReleaseDataFactory.validateChartRelease(chart, release)) {
-            return WatcherAppMessageConstants.INVALID_ARGS_VALUE;
-        }
+    public String handleUnwatchCommand(String chart, String release, String userId) {
 
         try {
 
             Boolean flag = watcherDBService.removeWatcherInfo(chart, release, userId);
             if (flag) {
-                return WatcherAppMessageConstants.SUCCESS_UNWATCH;
+                return WatcherAppMessageConstants.SUCCESS_UNWATCH + "\nChart `" + chart + "`\nRelease `" + release + "`\n";
             } else {
-                return WatcherAppMessageConstants.NOT_A_WATCHER;
+                return WatcherAppMessageConstants.NOT_A_WATCHER + "\nChart `" + chart + "`\nRelease `" + release + "`\n";
             }
 
         } catch (Exception e) {
 
             LOGGER.error("Error occurred in database server while deleting watcher information.", e);
-            return WatcherAppMessageConstants.FAILURE;
+            return WatcherAppMessageConstants.FAILURE + "\nChart `" + chart + "`\nRelease `" + release + "`\n";
 
         }
 
     }
 
-    public String handleWatcherListCommand(String commandArg) {
-
-        StringTokenizer tokens = new StringTokenizer(commandArg);
-        String chart = tokens.nextToken();
-        String release = tokens.nextToken();
-
-        if (!chartReleaseDataFactory.validateChartRelease(chart, release)) {
-            return WatcherAppMessageConstants.INVALID_ARGS_VALUE;
-        }
+    public String handleWatcherListCommand(String chart, String release) {
 
         try {
 

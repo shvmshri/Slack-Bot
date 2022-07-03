@@ -3,10 +3,7 @@ package com.sprinklr.slackbot.controller;
 import com.sprinklr.slackbot.bean.JenkinsJobInfo;
 import com.sprinklr.slackbot.service.JenkinsService;
 import com.sprinklr.slackbot.util.WatcherAppMessageConstants;
-import jakarta.ws.rs.ApplicationPath;
-import jakarta.ws.rs.Consumes;
-import jakarta.ws.rs.POST;
-import jakarta.ws.rs.Path;
+import jakarta.ws.rs.*;
 import jakarta.ws.rs.core.Application;
 import jakarta.ws.rs.core.MediaType;
 import jakarta.ws.rs.core.Response;
@@ -16,7 +13,6 @@ import org.springframework.stereotype.Service;
 
 @ApplicationPath("/api")
 @Path("/jenkins")
-
 @Service
 public class JenkinsAPI extends Application {
 
@@ -24,7 +20,6 @@ public class JenkinsAPI extends Application {
     @Path("/on-job-trigger")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response onJobTrigger(JenkinsJobInfo jobDetails) {
-
         ApplicationContext ctx = new AnnotationConfigApplicationContext("com.sprinklr.slackbot");
         JenkinsService jenkinsService = ctx.getBean(JenkinsService.class);
 

@@ -13,7 +13,7 @@ public class WatcherAppMessageConstants {
     public static final String INVALID_ARGS_NUM = "Invalid number of Arguments! Use \"/watcher help\" command to launch a help desk.";
     public static final String INVALID_ARGS = "Invalid Arguments! Use \"/watcher help\" command to launch a help desk.";
     public static final String INVALID_ARGS_VALUE = "Provided values of chartName or releaseName are invalid. Please provide valid names to proceed further.";
-    public static final String INVALID_TIME = "Invalid format of Time! Use \"/watcher help\" command to launch a help desk.";
+    public static final String INVALID_TIME = "Invalid Time!";
     public static final String SUCCESS_JENKINS_AS_WATCHER = "Hey, we have added you to our Watcher's List for the server you triggered a build for. This will help you prevent clashes and will notify you if any other user try to invoke a build on the same server.";
 
 }

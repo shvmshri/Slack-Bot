@@ -24,25 +24,9 @@ public class ChartReleaseDataFactory {
     private static final Logger LOGGER = LoggerFactory.getLogger(ChartReleaseDataFactory.class);
     private static final String ENDPOINT = "https://qa4-red-int.sprinklr.com/internal/api/v1/fetchModulesInfoForGivenRepo";
     private static final String HEADER = "X-Red-Api-Token";
-    private static final String K8S = "k8s";
     private static final String PARAM_NAME = "repo";
-    private static final ConcurrentHashMap<String, List<String>> chartReleaseMappings = new ConcurrentHashMap<String, List<String>>();
     private static List<String> repositryNames = new ArrayList<>(Arrays.asList("Sprinklr Main App"));
 
-
-    private void storeDataInMap(String chartReleaseInfo) {
-        try {
-            // Just to test
-            // chartReleaseInfo = "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}";
-            Map<String, Map<String, List<String>>> map = new Gson().fromJson(chartReleaseInfo, new TypeToken<HashMap<String, Map<String, List<String>>>>() {
-            }.getType());
-            for (Map.Entry<String, Map<String, List<String>>> entry : map.entrySet()) {
-                chartReleaseMappings.put(entry.getKey(), entry.getValue().get(K8S));
-            }
-        } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error while using GSON to convert JSON string to map", e);
-        }
-    }
 
     private HttpRequestBase getRequestwithParam(String paramValue) {
 
@@ -62,15 +46,15 @@ public class ChartReleaseDataFactory {
         return request;
     }
 
-    private void fetchChartReleaseData() {
+    public String fetchChartReleaseData() {
         CloseableHttpClient httpclient = HttpClients.createDefault();
-
+        String result = null;
         for (String repo : repositryNames) {
             HttpRequestBase request = getRequestwithParam(repo);
             try {
                 HttpResponse httpResponse = httpclient.execute(request);
-                String result = EntityUtils.toString(httpResponse.getEntity());
-                storeDataInMap(result);
+                result = EntityUtils.toString(httpResponse.getEntity());
+                //storeDataInMap(result);
             } catch (Exception e) {
                 LOGGER.error("[ChartReleaseDataCache_CRITICAL] Error occurred while executing request of fetching data from red API regarding chart and release details for repositry " + repo, e);
             }
@@ -82,18 +66,8 @@ public class ChartReleaseDataFactory {
         } catch (Exception e) {
             LOGGER.error("[ChartReleaseDataCache_SEVERE] Error occurred while closing Http Client", e);
         }
-
+        return result;
     }
 
-    public boolean validateChartRelease(String chart, String release) {
-        chartReleaseMappings.clear();
-        fetchChartReleaseData();
-        //storeDataInMap("j");
-        if (chartReleaseMappings.containsKey(chart)) {
-            return chartReleaseMappings.get(chart).contains(release);
-        } else {
-            return false;
-        }
-    }
 
 }

@@ -12,7 +12,7 @@ public class Watcher {
     public static String CHART_NAME = "chartName";
     public static String RELEASE_NAME = "releaseName";
     public static String USER_ID = "userId";
-    public static String USER_EMAIL = "userEmail";
+
     public static String DURATION = "duration";
     public static String EXPIRE_AT = "expireAt";
     public static String COLLECTION = "Watcher";
@@ -22,7 +22,7 @@ public class Watcher {
     private String chartName;
     private String releaseName;
     private String userId;
-    private String userEmail;
+
     private String duration;
 
     private Date expireAt;
@@ -31,12 +31,11 @@ public class Watcher {
     public Watcher() {
     }
 
-    public Watcher(String chart, String release, String duration, String userId, String userEmail) {
+    public Watcher(String chart, String release, String duration, String userId) {
         this.chartName = chart;
         this.releaseName = release;
         this.duration = duration;
         this.userId = userId;
-        this.userEmail = userEmail;
         this.expireAt = Utils.findExpireDate(duration);
     }
 
@@ -71,14 +70,6 @@ public class Watcher {
 
     public void setUserId(String userId) {
         this.userId = userId;
-    }
-
-    public String getUserEmail() {
-        return userEmail;
-    }
-
-    public void setUserEmail(String userEmail) {
-        this.userEmail = userEmail;
     }
 
     public String getDuration() {
