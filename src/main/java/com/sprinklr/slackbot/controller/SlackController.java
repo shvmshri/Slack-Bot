@@ -26,5 +26,6 @@ public class SlackController {
         } catch (Exception e) {
             LOGGER.error("[SLACK_CONTROLLER_CRITICAL] Could not start server", e);
         }
+
     }
 }

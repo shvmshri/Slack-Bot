@@ -7,19 +7,19 @@ public enum WatcherAppSlackCommand {
 
 
     private String command;
-    private String chart;
-    private String chartBlock;
-    private String release;
-    private String releaseBlock;
+    private String chartActionId;
+    private String chartBlockId;
+    private String releaseActionId;
+    private String releaseBlockId;
     private String view;
     private String title;
 
-    WatcherAppSlackCommand(String command, String chart, String chartBlock, String release, String releaseBlock, String view, String title) {
+    WatcherAppSlackCommand(String command, String chartActionId, String chartBlockId, String releaseActionId, String releaseBlockId, String view, String title) {
         this.command = command;
-        this.chart = chart;
-        this.chartBlock = chartBlock;
-        this.release = release;
-        this.releaseBlock = releaseBlock;
+        this.chartActionId = chartActionId;
+        this.chartBlockId = chartBlockId;
+        this.releaseActionId = releaseActionId;
+        this.releaseBlockId = releaseBlockId;
         this.view = view;
         this.title = title;
     }
@@ -40,36 +40,36 @@ public enum WatcherAppSlackCommand {
         this.command = command;
     }
 
-    public String getChart() {
-        return chart;
+    public String getChartActionId() {
+        return chartActionId;
     }
 
-    public void setChart(String chart) {
-        this.chart = chart;
+    public void setChartActionId(String chartActionId) {
+        this.chartActionId = chartActionId;
     }
 
-    public String getChartBlock() {
-        return chartBlock;
+    public String getChartBlockId() {
+        return chartBlockId;
     }
 
-    public void setChartBlock(String chartBlock) {
-        this.chartBlock = chartBlock;
+    public void setChartBlockId(String chartBlockId) {
+        this.chartBlockId = chartBlockId;
     }
 
-    public String getRelease() {
-        return release;
+    public String getReleaseActionId() {
+        return releaseActionId;
     }
 
-    public void setRelease(String release) {
-        this.release = release;
+    public void setReleaseActionId(String releaseActionId) {
+        this.releaseActionId = releaseActionId;
     }
 
-    public String getReleaseBlock() {
-        return releaseBlock;
+    public String getReleaseBlockId() {
+        return releaseBlockId;
     }
 
-    public void setReleaseBlock(String releaseBlock) {
-        this.releaseBlock = releaseBlock;
+    public void setReleaseBlockId(String releaseBlockId) {
+        this.releaseBlockId = releaseBlockId;
     }
 
     public String getTitle() {

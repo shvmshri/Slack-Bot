@@ -1,6 +1,5 @@
 package com.sprinklr.slackbot.app;
 
-import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.slack.api.bolt.App;
 import com.slack.api.methods.response.views.ViewsOpenResponse;
@@ -9,8 +8,10 @@ import com.slack.api.model.block.LayoutBlock;
 import com.slack.api.model.view.View;
 import com.slack.api.model.view.ViewState;
 import com.sprinklr.slackbot.enums.WatcherAppSlackCommand;
+import com.sprinklr.slackbot.factory.ChartReleaseDataFactory;
 import com.sprinklr.slackbot.service.SlackMessageDispatcher;
 import com.sprinklr.slackbot.service.WatcherCommandService;
+import com.sprinklr.slackbot.util.Utils;
 import com.sprinklr.slackbot.util.WatcherAppMessageConstants;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -40,12 +41,17 @@ public class WatcherAppBuilder {
     private static final String DURATION = "DURATION";
     private static final String DURATION_BLOCK = "DURATION_BLOCK";
     private static final String CHART_NAME = "chartName";
-    private static final Gson gson = new Gson();
+    private static final String REFRESH = "Refresh";
+    private static final String MODULE_REFRESH = "moduleRefresh";
+    private static final String PRIMARY = "primary";
+
 
     @Autowired
     SlackMessageDispatcher slackMessageDispatcher;
     @Autowired
     WatcherCommandService watcherCommandService;
+    @Autowired
+    ChartReleaseDataFactory chartReleaseDataFactory;
 
     public void addAndConfigureCommands(App app) {
 
@@ -71,7 +77,7 @@ public class WatcherAppBuilder {
             Map<String, String> metadata = new HashMap<>();
             ViewsOpenResponse viewsOpenRes = ctx.client().viewsOpen(r -> r
                     .triggerId(ctx.getTriggerId())
-                    .view(buildView(gson.toJson(metadata), watcherAppSlackCommand)));
+                    .view(buildView(Utils.toJson(metadata), watcherAppSlackCommand)));
             if (viewsOpenRes.isOk()) {
                 return ctx.ack();
             } else {
@@ -83,29 +89,39 @@ public class WatcherAppBuilder {
     }
 
     private View buildView(String privateMetadata, WatcherAppSlackCommand watcherAppSlackCommand) {
+
         InputBlock durationBlock = input(input -> input
                 .blockId(DURATION_BLOCK)
                 .element(plainTextInput(pti -> pti.actionId(DURATION).placeholder(plainText("Enter duration to watch"))))
                 .label(plainText(pt -> pt.text("Duration(in hours)")))
         );
 
+        //Arraylist of different blocks of the view
         ArrayList<LayoutBlock> viewBlocks = new ArrayList<>();
         viewBlocks.add(section(section -> section
                 .text(markdownText("Fill in the necessary details"))));
+        viewBlocks.add(section(sectionBlockBuilder -> sectionBlockBuilder
+                .text(markdownText("_Refresh chart names and release names_"))
+                .accessory(button(buttonElementBuilder -> buttonElementBuilder
+                        .actionId(MODULE_REFRESH)
+                        .text(plainText(REFRESH))
+                        .style(PRIMARY)
+                ))
+        ));
         viewBlocks.add(section(section -> section
                 .text(markdownText("*Chart Name*"))));
         viewBlocks.add(actions(actionsBlockBuilder -> actionsBlockBuilder
-                .blockId(watcherAppSlackCommand.getChartBlock())
+                .blockId(watcherAppSlackCommand.getChartBlockId())
                 .elements(asElements(externalSelect(externalSelectElementBuilder -> externalSelectElementBuilder
-                        .actionId(watcherAppSlackCommand.getChart())
+                        .actionId(watcherAppSlackCommand.getChartActionId())
                         .placeholder(plainText("Select the chart name"))
                         .minQueryLength(0)
                 )))
         ));
         viewBlocks.add(input(inputBlockBuilder -> inputBlockBuilder
-                .blockId(watcherAppSlackCommand.getReleaseBlock())
+                .blockId(watcherAppSlackCommand.getReleaseBlockId())
                 .element(multiExternalSelect(multiExternalSelectElementBuilder -> multiExternalSelectElementBuilder
-                        .actionId(watcherAppSlackCommand.getRelease())
+                        .actionId(watcherAppSlackCommand.getReleaseActionId())
                         .placeholder(plainText("Select the release names"))
                         .minQueryLength(0)
                 ))
@@ -131,28 +147,32 @@ public class WatcherAppBuilder {
 
     private void setBlockActions(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
 
-        app.blockAction(watcherAppSlackCommand.getChart(), (req, ctx) -> {
+        app.blockAction(watcherAppSlackCommand.getChartActionId(), (req, ctx) -> {
             Type mapType = new TypeToken<Map<String, String>>() {
             }.getType();
-            Map<String, String> metadata = gson.fromJson(req.getPayload().getView().getPrivateMetadata(), mapType);
-            System.out.println(req.getPayload().getView().getState().getValues().get(watcherAppSlackCommand.getChartBlock()).get(watcherAppSlackCommand.getChart()).getSelectedOption().getText().getText());
-
+            Map<String, String> metadata = Utils.fromJson(req.getPayload().getView().getPrivateMetadata(), mapType);
             metadata.put(CHART_NAME,
-                    req.getPayload().getView().getState().getValues().get(watcherAppSlackCommand.getChartBlock()).get(watcherAppSlackCommand.getChart()).getSelectedOption().getText().getText());
+                    req.getPayload().getView().getState().getValues().get(watcherAppSlackCommand.getChartBlockId()).get(watcherAppSlackCommand.getChartActionId()).getSelectedOption().getText().getText());
             ctx.client().viewsUpdate(r -> r.viewId(req.getPayload().getView().getId())
                     .hash(req.getPayload().getView().getHash())
-                    .view(buildView(gson.toJson(metadata), watcherAppSlackCommand))
+                    .view(buildView(Utils.toJson(metadata), watcherAppSlackCommand))
             );
+            return ctx.ack();
+        });
+
+        app.blockAction(MODULE_REFRESH, (req, ctx) -> {
+            chartReleaseDataFactory.refreshModuleInfo();
             return ctx.ack();
         });
 
     }
 
     private void setViewSubmission(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
+
         app.viewSubmission(watcherAppSlackCommand.getView(), (req, ctx) -> {
             String userId = req.getPayload().getUser().getId();
             Map<String, Map<String, ViewState.Value>> map = req.getPayload().getView().getState().getValues();
-            List<ViewState.SelectedOption> releases = map.get(watcherAppSlackCommand.getReleaseBlock()).get(watcherAppSlackCommand.getRelease()).getSelectedOptions();
+            List<ViewState.SelectedOption> releases = map.get(watcherAppSlackCommand.getReleaseBlockId()).get(watcherAppSlackCommand.getReleaseActionId()).getSelectedOptions();
 
             app.executorService().submit(() -> {
                 for (ViewState.SelectedOption release : releases) {
@@ -163,11 +183,13 @@ public class WatcherAppBuilder {
 
             return ctx.ack();
         });
+
     }
 
 
     private void callSlackService(WatcherAppSlackCommand watcherAppSlackCommand, String userId, Map<String, Map<String, ViewState.Value>> map, String release) {
-        String chart = map.get(watcherAppSlackCommand.getChartBlock()).get(watcherAppSlackCommand.getChart()).getSelectedOption().getText().getText();
+
+        String chart = map.get(watcherAppSlackCommand.getChartBlockId()).get(watcherAppSlackCommand.getChartActionId()).getSelectedOption().getText().getText();
         String message;
         switch (watcherAppSlackCommand) {
 
@@ -194,6 +216,9 @@ public class WatcherAppBuilder {
     }
 
     private void setViewClosed(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
+
         app.viewClosed(watcherAppSlackCommand.getView(), (req, ctx) -> ctx.ack());
+
     }
+
 }

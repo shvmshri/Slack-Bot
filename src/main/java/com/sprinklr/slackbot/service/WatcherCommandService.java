@@ -9,12 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.StringTokenizer;
 
 
 @Service
 public class WatcherCommandService {
     private static final Logger LOGGER = LoggerFactory.getLogger(WatcherCommandService.class);
+
     @Autowired
     SlackMessageDispatcher slackMessageDispatcher;
     @Autowired

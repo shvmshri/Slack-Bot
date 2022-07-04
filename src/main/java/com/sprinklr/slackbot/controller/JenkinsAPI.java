@@ -20,6 +20,7 @@ public class JenkinsAPI extends Application {
     @Path("/on-job-trigger")
     @Consumes(MediaType.APPLICATION_JSON)
     public Response onJobTrigger(JenkinsJobInfo jobDetails) {
+
         ApplicationContext ctx = new AnnotationConfigApplicationContext("com.sprinklr.slackbot");
         JenkinsService jenkinsService = ctx.getBean(JenkinsService.class);
 

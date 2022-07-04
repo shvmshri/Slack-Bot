@@ -28,6 +28,7 @@ public class MyApp extends Application {
     @Consumes(MediaType.APPLICATION_FORM_URLENCODED)
 
     public SlackExternalSource load(MultivaluedMap<String, String> formParams) {
+
         SlackRequestPayload slackRequestPayload = gson.fromJson(formParams.getFirst(PAYLOAD), SlackRequestPayload.class);
         ApplicationContext context = new AnnotationConfigApplicationContext("com.sprinklr.slackbot");
         SlackWatcherAppService slackWatcherAppService = context.getBean(SlackWatcherAppService.class);
