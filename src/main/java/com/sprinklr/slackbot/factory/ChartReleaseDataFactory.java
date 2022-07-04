@@ -100,6 +100,7 @@ public class ChartReleaseDataFactory {
             }.getType();
             ArrayList<String> chartNames = Utils.fromJson(chartReleaseMap.keySet().toString(), listType);
 
+
             Collections.sort(chartNames);
             return chartNames;
         } catch (Exception e) {

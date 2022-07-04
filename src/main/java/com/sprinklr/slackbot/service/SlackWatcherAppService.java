@@ -16,6 +16,9 @@ import java.util.*;
 @Service
 public class SlackWatcherAppService {
     private static final String CHART_NAME = "chartName";
+    private static final String REPO_NAME = "repoName";
+    private static final String CHART_ACTION_ID = "chartActionId";
+
     private static final List<String> repositryNames = new ArrayList<>(Arrays.asList("Sprinklr Main App"));
 
     @Autowired
@@ -25,33 +28,31 @@ public class SlackWatcherAppService {
         Type privateMetadataMapType = new TypeToken<Map<String, String>>() {
         }.getType();
         Map<String, String> metadata = Utils.fromJson(privateMetadata, privateMetadataMapType);
+
         String chartName = metadata.get(CHART_NAME);
+        String repo = metadata.get(REPO_NAME);
 
         for (WatcherAppSlackCommand watcherAppSlackCommand : WatcherAppSlackCommand.values()) {
             if (actionId.equals(watcherAppSlackCommand.getChartActionId())) {
-                return getChartSlackObject(search);
+                return getChartSlackObject(search, repo);
             }
         }
-        return getReleaseSlackObject(search, chartName);
+
+        return getReleaseSlackObject(search, chartName, repo);
     }
 
     //  <---------------------------------- PRIVATE METHODS ---------------------------------->
 
-    private SlackExternalSource getChartSlackObject(String search) {
-        ArrayList<String> chartNames = new ArrayList<>();
-        for (String repo : repositryNames) {
-            chartNames.addAll(chartReleaseDataFactory.getChartNames(repo));
-        }
+    private SlackExternalSource getChartSlackObject(String search, String repo) {
+        ArrayList<String> chartNames = chartReleaseDataFactory.getChartNames(repo);
 
         Collections.sort(chartNames);
         return WatcherAppUtil.getFormattedObject(chartNames, search);
     }
 
-    private SlackExternalSource getReleaseSlackObject(String search, String chartName) {
-        ArrayList<String> releaseNames = new ArrayList<>();
-        for (String repo : repositryNames) {
-            releaseNames.addAll(chartReleaseDataFactory.getReleaseNames(repo, chartName));
-        }
+    private SlackExternalSource getReleaseSlackObject(String search, String chartName, String repo) {
+        ArrayList<String> releaseNames = chartReleaseDataFactory.getReleaseNames(repo, chartName);
+
         Collections.sort(releaseNames);
         return WatcherAppUtil.getFormattedObject(releaseNames, search);
     }

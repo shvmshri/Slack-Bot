@@ -13,6 +13,7 @@ import com.sprinklr.slackbot.service.SlackMessageDispatcher;
 import com.sprinklr.slackbot.service.WatcherCommandService;
 import com.sprinklr.slackbot.util.Utils;
 import com.sprinklr.slackbot.util.WatcherAppMessageConstants;
+import com.sprinklr.slackbot.util.WatcherAppUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -38,12 +39,21 @@ public class WatcherAppBuilder {
     private static final String PLAIN_TEXT = "plain_text";
     private static final String SUBMIT = "Submit";
     private static final String CANCEL = "Cancel";
-    private static final String DURATION = "DURATION";
-    private static final String DURATION_BLOCK = "DURATION_BLOCK";
+    private static final String DURATION_ACTION_ID = "DURATION";
+    private static final String DURATION_BLOCK_ID = "DURATION_BLOCK";
     private static final String CHART_NAME = "chartName";
+    private static final String REPO_NAME = "repoName";
+    private static final String DEFAULT_REPO = "Sprinklr Main App";
     private static final String REFRESH = "Refresh";
     private static final String MODULE_REFRESH = "moduleRefresh";
     private static final String PRIMARY = "primary";
+
+    private static final String CHART_BLOCK_ID = "chartBlockId";
+    private static final String CHART_ACTION_ID = "chartActionId";
+    private static final String RELEASE_BLOCK_ID = "releaseBlockId";
+    private static final String RELEASE_ACTION_ID = "releaseActionId";
+    private static final String REPO_BLOCK_ID = "repoBlockId";
+    private static final String REPO_ACTION_ID = "repoActionId";
 
 
     @Autowired
@@ -56,7 +66,7 @@ public class WatcherAppBuilder {
     public void addAndConfigureCommands(App app) {
 
         for (WatcherAppSlackCommand watcherAppSlackCommand : WatcherAppSlackCommand.values()) {
-            //receive the command request and present the view to the slack user
+            //receive the command and present the view
             setCommand(app, watcherAppSlackCommand);
 
             //receive the submission of individual block actions (external data select fields)
@@ -69,12 +79,14 @@ public class WatcherAppBuilder {
             setViewClosed(app, watcherAppSlackCommand);
         }
 
+
     }
 
     private void setCommand(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
 
         app.command(watcherAppSlackCommand.getCommand(), (req, ctx) -> {
             Map<String, String> metadata = new HashMap<>();
+            metadata.put(REPO_NAME, DEFAULT_REPO);
             ViewsOpenResponse viewsOpenRes = ctx.client().viewsOpen(r -> r
                     .triggerId(ctx.getTriggerId())
                     .view(buildView(Utils.toJson(metadata), watcherAppSlackCommand)));
@@ -91,23 +103,36 @@ public class WatcherAppBuilder {
     private View buildView(String privateMetadata, WatcherAppSlackCommand watcherAppSlackCommand) {
 
         InputBlock durationBlock = input(input -> input
-                .blockId(DURATION_BLOCK)
-                .element(plainTextInput(pti -> pti.actionId(DURATION).placeholder(plainText("Enter duration to watch"))))
+                .blockId(DURATION_BLOCK_ID)
+                .element(plainTextInput(pti -> pti.actionId(DURATION_ACTION_ID).placeholder(plainText("Enter duration to watch"))))
                 .label(plainText(pt -> pt.text("Duration(in hours)")))
         );
 
-        //Arraylist of different blocks of the view
+        //Arraylist of different blocks of the view presented on different commands
         ArrayList<LayoutBlock> viewBlocks = new ArrayList<>();
         viewBlocks.add(section(section -> section
                 .text(markdownText("Fill in the necessary details"))));
         viewBlocks.add(section(sectionBlockBuilder -> sectionBlockBuilder
-                .text(markdownText("_Refresh chart names and release names_"))
+                .text(markdownText("_Refresh chart names and release names"))
                 .accessory(button(buttonElementBuilder -> buttonElementBuilder
                         .actionId(MODULE_REFRESH)
                         .text(plainText(REFRESH))
                         .style(PRIMARY)
                 ))
         ));
+        viewBlocks.add(section(section -> section
+                .text(markdownText("*Repository Name*"))));
+        viewBlocks.add(
+                actions(actionsBlockBuilder -> actionsBlockBuilder
+                        .blockId(watcherAppSlackCommand.getRepoBlockId())
+                        .elements(asElements(staticSelect(staticSelectElementBuilder -> staticSelectElementBuilder
+                                .actionId(watcherAppSlackCommand.getRepoActionId())
+                                .placeholder(plainText("Enter the repository name. (Leave empty if it's 'Sprinklr Main App)'"))
+                                .options(WatcherAppUtil.getRepoNamesObjectList())
+                                .initialOption(WatcherAppUtil.getDefaultValueObject())
+                        )))
+                ));
+
         viewBlocks.add(section(section -> section
                 .text(markdownText("*Chart Name*"))));
         viewBlocks.add(actions(actionsBlockBuilder -> actionsBlockBuilder
@@ -144,6 +169,7 @@ public class WatcherAppBuilder {
 
         );
     }
+    //Called after the user has selected a value for the block
 
     private void setBlockActions(App app, WatcherAppSlackCommand watcherAppSlackCommand) {
 
@@ -160,6 +186,21 @@ public class WatcherAppBuilder {
             return ctx.ack();
         });
 
+        app.blockAction(REPO_ACTION_ID, (req, ctx) -> {
+            Type mapType = new TypeToken<Map<String, String>>() {
+            }.getType();
+            Map<String, String> metadata = Utils.fromJson(req.getPayload().getView().getPrivateMetadata(), mapType);
+            metadata.put(REPO_NAME,
+                    req.getPayload().getView().getState().getValues().get(watcherAppSlackCommand.getRepoBlockId()).get(watcherAppSlackCommand.getRepoActionId()).getSelectedOption().getText().getText());
+            ctx.client().viewsUpdate(r -> r.viewId(req.getPayload().getView().getId())
+                    .hash(req.getPayload().getView().getHash())
+                    .view(buildView(Utils.toJson(metadata), watcherAppSlackCommand))
+            );
+            return ctx.ack();
+        });
+
+
+        //help to refresh chartReleaseData Cache
         app.blockAction(MODULE_REFRESH, (req, ctx) -> {
             chartReleaseDataFactory.refreshModuleInfo();
             return ctx.ack();
@@ -194,7 +235,7 @@ public class WatcherAppBuilder {
         switch (watcherAppSlackCommand) {
 
             case ADD_WATCHER:
-                String duration = map.get(DURATION_BLOCK).get(DURATION).getValue();
+                String duration = map.get(DURATION_BLOCK_ID).get(DURATION_ACTION_ID).getValue();
                 message = watcherCommandService.handleWatchCommand(chart, release, duration, userId);
                 slackMessageDispatcher.sendMessage(userId, message);
                 break;
