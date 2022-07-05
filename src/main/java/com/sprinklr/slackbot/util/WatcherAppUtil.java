@@ -5,21 +5,19 @@ import com.slack.api.model.block.composition.PlainTextObject;
 import com.sprinklr.slackbot.dto.SlackExternalSource;
 import com.sprinklr.slackbot.dto.SlackOptions;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 public class WatcherAppUtil {
 
-    private static final Map<String, String> repoProjectIdMap = new HashMap<>();
+    private static final ArrayList<String> repoProjectIdMap = new ArrayList<>();
     private static final String VALUE = "value-0";
     private static final String DEFAULT_REPO_NAME = "Sprinklr Main App";
 
     static {
-        repoProjectIdMap.put("Sprinklr Main App", "");
+        repoProjectIdMap.add("Sprinklr Main App");
+        // repoProjectIdMap.add("Spinklr custom helloo");
     }
 
     public static SlackExternalSource getFormattedObject(ArrayList<String> data, String search) {
@@ -40,10 +38,11 @@ public class WatcherAppUtil {
     public static List<OptionObject> getRepoNamesObjectList() {
         SlackOptions slackOptions = new SlackOptions(repoProjectIdMap.size());
         int i = 0;
-        for (String repo : repoProjectIdMap.keySet()) {
+        for (String repo : repoProjectIdMap) {
             slackOptions.addOptions(i, repo);
             i++;
         }
+        System.out.println(slackOptions.getOptions().toString());
         return slackOptions.getOptions();
     }
 
