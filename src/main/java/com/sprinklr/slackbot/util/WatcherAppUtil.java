@@ -11,13 +11,13 @@ import java.util.regex.Pattern;
 
 public class WatcherAppUtil {
 
-    private static final ArrayList<String> repoProjectIdMap = new ArrayList<>();
+    private static final ArrayList<String> repoList = new ArrayList<>();
     private static final String VALUE = "value-0";
     private static final String DEFAULT_REPO_NAME = "Sprinklr Main App";
 
     static {
-        repoProjectIdMap.add("Sprinklr Main App");
-        // repoProjectIdMap.add("Spinklr custom helloo");
+        repoList.add("Sprinklr Main App");
+        // repoList.add("Spinklr custom helloo");
     }
 
     public static SlackExternalSource getFormattedObject(ArrayList<String> data, String search) {
@@ -36,9 +36,9 @@ public class WatcherAppUtil {
     }
 
     public static List<OptionObject> getRepoNamesObjectList() {
-        SlackOptions slackOptions = new SlackOptions(repoProjectIdMap.size());
+        SlackOptions slackOptions = new SlackOptions(repoList.size());
         int i = 0;
-        for (String repo : repoProjectIdMap) {
+        for (String repo : repoList) {
             slackOptions.addOptions(i, repo);
             i++;
         }
@@ -54,6 +54,3 @@ public class WatcherAppUtil {
     }
 
 }
-
-
-

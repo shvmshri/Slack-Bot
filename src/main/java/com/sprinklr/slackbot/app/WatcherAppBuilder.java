@@ -48,14 +48,6 @@ public class WatcherAppBuilder {
     private static final String MODULE_REFRESH = "moduleRefresh";
     private static final String PRIMARY = "primary";
 
-    private static final String CHART_BLOCK_ID = "chartBlockId";
-    private static final String CHART_ACTION_ID = "chartActionId";
-    private static final String RELEASE_BLOCK_ID = "releaseBlockId";
-    private static final String RELEASE_ACTION_ID = "releaseActionId";
-    private static final String REPO_BLOCK_ID = "repoBlockId";
-    private static final String REPO_ACTION_ID = "repoActionId";
-
-
     @Autowired
     SlackMessageDispatcher slackMessageDispatcher;
     @Autowired
@@ -186,7 +178,7 @@ public class WatcherAppBuilder {
             return ctx.ack();
         });
 
-        app.blockAction(REPO_ACTION_ID, (req, ctx) -> {
+        app.blockAction(watcherAppSlackCommand.getRepoActionId(), (req, ctx) -> {
             Type mapType = new TypeToken<Map<String, String>>() {
             }.getType();
             Map<String, String> metadata = Utils.fromJson(req.getPayload().getView().getPrivateMetadata(), mapType);
