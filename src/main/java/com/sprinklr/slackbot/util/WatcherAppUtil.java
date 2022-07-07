@@ -17,7 +17,7 @@ public class WatcherAppUtil {
 
     static {
         repoList.add("Sprinklr Main App");
-        // repoList.add("Spinklr custom helloo");
+       // repoList.add("Spinklr custom helloo");
     }
 
     public static SlackExternalSource getFormattedObject(ArrayList<String> data, String search) {

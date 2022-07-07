@@ -1,135 +1,164 @@
 package com.sprinklr.slackbot.factory;
 
-import com.google.common.cache.CacheBuilder;
-import com.google.common.cache.CacheLoader;
-import com.google.common.cache.LoadingCache;
+import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 import com.sprinklr.slackbot.util.AppProperties;
 import com.sprinklr.slackbot.util.Utils;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.client.utils.URIBuilder;
-import org.apache.http.impl.client.CloseableHttpClient;
-import org.apache.http.impl.client.HttpClients;
-import org.apache.http.util.EntityUtils;
-import org.jetbrains.annotations.NotNull;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 
+import java.io.BufferedReader;
+import java.io.DataOutputStream;
+import java.io.InputStreamReader;
+import java.io.UnsupportedEncodingException;
 import java.lang.reflect.Type;
-import java.net.URI;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.Map;
-import java.util.concurrent.TimeUnit;
-
+import java.net.HttpURLConnection;
+import java.net.URL;
+import java.net.URLEncoder;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 @Service
 public class ChartReleaseDataFactory {
+
     private static final Logger LOGGER = LoggerFactory.getLogger(ChartReleaseDataFactory.class);
-    private static final String K8S = "k8s";
     private static final String ENDPOINT = "https://qa4-red-int.sprinklr.com/internal/api/v1/fetchModulesInfoForGivenRepo";
     private static final String HEADER = "X-Red-Api-Token";
+    private static final String K8S = "k8s";
     private static final String PARAM_NAME = "repo";
-    private static LoadingCache<String, Map<String, Map<String, ArrayList<String>>>> repoModuleInfoCache;
 
-    public ChartReleaseDataFactory() {
+    private static ConcurrentHashMap<String, Map<String, Map<String, ArrayList<String>>>> repoModuleInfoCache = new ConcurrentHashMap<>();
 
-        repoModuleInfoCache = CacheBuilder.newBuilder()
-                .refreshAfterWrite(1, TimeUnit.DAYS)
-                .build(new CacheLoader<String, Map<String, Map<String, ArrayList<String>>>>() {
-                    @NotNull
-                    @Override
-                    public Map<String, Map<String, ArrayList<String>>> load(@NotNull String repo) throws Exception {
-                        String result = fetchChartReleaseData(repo);
-                        Type chartReleaseMapType = new TypeToken<Map<String, Map<String, ArrayList<String>>>>() {
-                        }.getType();
-                        return Utils.fromJson(result, chartReleaseMapType);
+    //same list of repositories as provided in WatcherApputil
+    private static List<String> repositryNames = new ArrayList<>(Arrays.asList("Sprinklr Main App"));
+
+
+    private void storeDataInMap(String repo, String chartReleaseInfo) {
+        try {
+            // Just to test
+            // chartReleaseInfo = "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}";
+            Map<String, Map<String, ArrayList<String>>> map = new Gson().fromJson(chartReleaseInfo, new TypeToken<HashMap<String, Map<String, List<String>>>>() {
+            }.getType());
+            repoModuleInfoCache.put(repo, map);
+        } catch (Exception e) {
+            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error while using GSON to convert JSON string to map", e);
+        }
+    }
+
+    private void fetchChartReleaseData() {
+        try {
+            URL url = new URL(ENDPOINT);
+            for (String repo : repositryNames) {
+                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con.setRequestMethod("GET");
+
+                //Set URL parameters
+                con.setDoOutput(true);
+                DataOutputStream out = new DataOutputStream(con.getOutputStream());
+                out.writeBytes(getParamsString(PARAM_NAME, repo));
+                out.flush();
+                out.close();
+
+                //Set Header
+                con.setRequestProperty(HEADER, AppProperties.RED_INTERNAL_API_TOKEN);
+
+                //Response
+                int responseCode = con.getResponseCode();
+                if (responseCode == HttpURLConnection.HTTP_OK) {
+                    try {
+                        String result = responseStringBody(con);
+                        System.out.println(result);
+                        storeDataInMap(repo, result);
+                    } catch (Exception e) {
+                        LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error while reading response from the request");
                     }
-                });
+
+                } else {
+                    LOGGER.error("[ChartReleaseDataFactory_SEVERE] Invalid response code receieved while fetching data");
+                }
+
+                //Close Connection
+                con.disconnect();
+
+            }
+        } catch (Exception e) {
+            LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error occurred due while fetching Chart,Release information", e);
+        }
+
 
     }
 
-
-    private HttpRequestBase getRequestwithParam(String paramValue) {
-
-        HttpRequestBase request = new HttpGet();
-        request.setHeader(HEADER, AppProperties.RED_INTERNAL_API_TOKEN);
-
-        try {
-            URIBuilder uriBuilder = new URIBuilder(ENDPOINT);
-            uriBuilder.addParameter(PARAM_NAME, paramValue);
-            URI uri = uriBuilder.build();
-            assert request != null;
-            request.setURI(uri);
-        } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error occurred due to the attempt of using invalid URL to fetch data about chartNames and ReleaseNames for the repository = " + paramValue, e);
+    private String responseStringBody(HttpURLConnection con) throws Exception {
+        BufferedReader in = new BufferedReader(
+                new InputStreamReader(con.getInputStream()));
+        String inputLine;
+        StringBuffer content = new StringBuffer();
+        while ((inputLine = in.readLine()) != null) {
+            content.append(inputLine);
         }
 
-        return request;
+        in.close();
+        return content.toString();
+
     }
 
-    private String fetchChartReleaseData(String paramValue) {
+    private String getParamsString(String param, String paramValue) throws UnsupportedEncodingException {
+        StringBuilder result = new StringBuilder();
 
-        CloseableHttpClient httpclient = HttpClients.createDefault();
-        String result = null;
-        HttpRequestBase request = getRequestwithParam(paramValue);
-        try {
-            HttpResponse httpResponse = httpclient.execute(request);
-            result = EntityUtils.toString(httpResponse.getEntity());
-        } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataCache_CRITICAL] Error occurred while executing request of fetching data from red API regarding chart and release details for repositry " + paramValue, e);
-        }
 
-        try {
-            httpclient.close();
-        } catch (Exception e) {
-            LOGGER.error("[ChartReleaseDataCache_SEVERE] Error occurred while closing Http Client", e);
-        }
-        return result;
+        result.append(URLEncoder.encode(param, "UTF-8"));
+        result.append("=");
+        result.append(URLEncoder.encode(paramValue, "UTF-8"));
+
+
+        return result.toString();
 
     }
 
     public ArrayList<String> getChartNames(String repo) {
 
-        try {
-            Map<String, Map<String, ArrayList<String>>> chartReleaseMap = repoModuleInfoCache.get(repo);
-            Type listType = new TypeToken<ArrayList<String>>() {
-            }.getType();
-            ArrayList<String> chartNames = Utils.fromJson(chartReleaseMap.keySet().toString(), listType);
-
-
-            Collections.sort(chartNames);
-            return chartNames;
-        } catch (Exception e) {
-            LOGGER.error("Exception occurred while fetching the module info", e);
-            return null;
+        if (!repoModuleInfoCache.containsKey(repo)) {
+            fetchChartReleaseData();
+//            storeDataInMap("Sprinklr Main App", "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}");
+//            storeDataInMap("Spinklr custom helloo", "{\"chart3\":{\"k8s\":[\"release31\",\"release32\"]},\"chart4\":{\"k8s\":[\"release41\",\"release42\"]}}");
         }
+
+        Map<String, Map<String, ArrayList<String>>> chartReleaseMap = repoModuleInfoCache.get(repo);
+        Type listType = new TypeToken<ArrayList<String>>() {
+        }.getType();
+        ArrayList<String> chartNames = Utils.fromJson(chartReleaseMap.keySet().toString(), listType);
+
+
+        Collections.sort(chartNames);
+        return chartNames;
+
 
     }
 
     public ArrayList<String> getReleaseNames(String repo, String chart) {
-        try {
-            Map<String, Map<String, ArrayList<String>>> chartReleaseMap = repoModuleInfoCache.get(repo);
-            ArrayList<String> releaseNames = chartReleaseMap.get(chart).get(K8S);
+        if (!repoModuleInfoCache.containsKey(repo)) {
+            fetchChartReleaseData();
+//            storeDataInMap("Sprinklr Main App", "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}");
+//            storeDataInMap("Spinklr custom helloo", "{\"chart3\":{\"k8s\":[\"release31\",\"release32\"]},\"chart4\":{\"k8s\":[\"release41\",\"release42\"]}}");
 
-            Collections.sort(releaseNames);
-            return releaseNames;
-        } catch (Exception e) {
-            LOGGER.error("Exception occurred while fetching the module info", e);
-            return null;
         }
+
+        Map<String, Map<String, ArrayList<String>>> chartReleaseMap = repoModuleInfoCache.get(repo);
+        ArrayList<String> releaseNames = chartReleaseMap.get(chart).get(K8S);
+
+        Collections.sort(releaseNames);
+        return releaseNames;
 
     }
 
     public void refreshModuleInfo() {
-
-        for (String key : repoModuleInfoCache.asMap().keySet()) {
-            repoModuleInfoCache.refresh(key);
-        }
+        repoModuleInfoCache.clear();
+        fetchChartReleaseData();
+//        storeDataInMap("Sprinklr Main App", "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}");
+//        storeDataInMap("Spinklr custom helloo", "{\"chart3\":{\"k8s\":[\"release31\",\"release32\"]},\"chart4\":{\"k8s\":[\"release41\",\"release42\"]}}");
 
     }
+
 
 }
