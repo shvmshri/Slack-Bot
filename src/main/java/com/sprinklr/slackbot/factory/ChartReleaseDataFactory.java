@@ -49,8 +49,9 @@ public class ChartReleaseDataFactory {
     private void fetchChartReleaseData() {
         try {
             URL url = new URL(ENDPOINT);
+            HttpURLConnection con = null;
             for (String repo : repositryNames) {
-                HttpURLConnection con = (HttpURLConnection) url.openConnection();
+                con = (HttpURLConnection) url.openConnection();
                 con.setRequestMethod("GET");
 
                 //Set URL parameters
