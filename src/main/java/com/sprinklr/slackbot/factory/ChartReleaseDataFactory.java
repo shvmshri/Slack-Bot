@@ -31,7 +31,7 @@ public class ChartReleaseDataFactory {
     private static ConcurrentHashMap<String, Map<String, Map<String, ArrayList<String>>>> repoModuleInfoCache = new ConcurrentHashMap<>();
 
     //same list of repositories as provided in WatcherApputil
-    private static List<String> repositryNames = new ArrayList<>(Arrays.asList("Sprinklr Main App"));
+//    private static List<String> repositryNames = new ArrayList<>(Arrays.asList("Sprinklr Main App"));
 
 
     private void storeDataInMap(String repo, String chartReleaseInfo) {
@@ -46,43 +46,42 @@ public class ChartReleaseDataFactory {
         }
     }
 
-    private void fetchChartReleaseData() {
+    private void fetchChartReleaseData(String repo) {
         try {
             URL url = new URL(ENDPOINT);
-            HttpURLConnection con = null;
-            for (String repo : repositryNames) {
-                con = (HttpURLConnection) url.openConnection();
-                con.setRequestMethod("GET");
 
-                //Set URL parameters
-                con.setDoOutput(true);
-                DataOutputStream out = new DataOutputStream(con.getOutputStream());
-                out.writeBytes(getParamsString(PARAM_NAME, repo));
-                out.flush();
-                out.close();
+            HttpURLConnection con = (HttpURLConnection) url.openConnection();
+            con.setRequestMethod("GET");
 
-                //Set Header
-                con.setRequestProperty(HEADER, AppProperties.RED_INTERNAL_API_TOKEN);
+            //Set URL parameters
+            con.setDoOutput(true);
+            DataOutputStream out = new DataOutputStream(con.getOutputStream());
+            out.writeBytes(getParamsString(PARAM_NAME, repo));
+            out.flush();
+            out.close();
 
-                //Response
-                int responseCode = con.getResponseCode();
-                if (responseCode == HttpURLConnection.HTTP_OK) {
-                    try {
-                        String result = responseStringBody(con);
-                        System.out.println(result);
-                        storeDataInMap(repo, result);
-                    } catch (Exception e) {
-                        LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error while reading response from the request");
-                    }
+            //Set Header
+            con.setRequestProperty(HEADER, AppProperties.RED_INTERNAL_API_TOKEN);
 
-                } else {
-                    LOGGER.error("[ChartReleaseDataFactory_SEVERE] Invalid response code receieved while fetching data");
+            //Response
+            int responseCode = con.getResponseCode();
+            if (responseCode == HttpURLConnection.HTTP_OK) {
+                try {
+                    String result = responseStringBody(con);
+                    System.out.println(result);
+                    storeDataInMap(repo, result);
+                } catch (Exception e) {
+                    LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error while reading response from the request");
                 }
 
-                //Close Connection
-                con.disconnect();
-
+            } else {
+                LOGGER.error("[ChartReleaseDataFactory_SEVERE] Invalid response code receieved while fetching data");
             }
+
+            //Close Connection
+            con.disconnect();
+
+
         } catch (Exception e) {
             LOGGER.error("[ChartReleaseDataFactory_SEVERE] Error occurred due while fetching Chart,Release information", e);
         }
@@ -120,7 +119,7 @@ public class ChartReleaseDataFactory {
     public ArrayList<String> getChartNames(String repo) {
 
         if (!repoModuleInfoCache.containsKey(repo)) {
-            fetchChartReleaseData();
+            fetchChartReleaseData(repo);
 //            storeDataInMap("Sprinklr Main App", "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}");
 //            storeDataInMap("Spinklr custom helloo", "{\"chart3\":{\"k8s\":[\"release31\",\"release32\"]},\"chart4\":{\"k8s\":[\"release41\",\"release42\"]}}");
         }
@@ -139,7 +138,7 @@ public class ChartReleaseDataFactory {
 
     public ArrayList<String> getReleaseNames(String repo, String chart) {
         if (!repoModuleInfoCache.containsKey(repo)) {
-            fetchChartReleaseData();
+            fetchChartReleaseData(repo);
 //            storeDataInMap("Sprinklr Main App", "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}");
 //            storeDataInMap("Spinklr custom helloo", "{\"chart3\":{\"k8s\":[\"release31\",\"release32\"]},\"chart4\":{\"k8s\":[\"release41\",\"release42\"]}}");
 
@@ -153,9 +152,9 @@ public class ChartReleaseDataFactory {
 
     }
 
-    public void refreshModuleInfo() {
+    public void refreshModuleInfo(String repo) {
         repoModuleInfoCache.clear();
-        fetchChartReleaseData();
+        fetchChartReleaseData(repo);
 //        storeDataInMap("Sprinklr Main App", "{\"chart1\":{\"k8s\":[\"release11\",\"release12\"]},\"chart2\":{\"k8s\":[\"release21\",\"release22\"]}}");
 //        storeDataInMap("Spinklr custom helloo", "{\"chart3\":{\"k8s\":[\"release31\",\"release32\"]},\"chart4\":{\"k8s\":[\"release41\",\"release42\"]}}");
 

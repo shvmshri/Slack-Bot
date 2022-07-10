@@ -194,7 +194,10 @@ public class WatcherAppBuilder {
 
         //help to refresh chartReleaseData Cache
         app.blockAction(MODULE_REFRESH, (req, ctx) -> {
-            chartReleaseDataFactory.refreshModuleInfo();
+            Type mapType = new TypeToken<Map<String, String>>() {
+            }.getType();
+            Map<String, String> metadata = Utils.fromJson(req.getPayload().getView().getPrivateMetadata(), mapType);
+            chartReleaseDataFactory.refreshModuleInfo(metadata.get(REPO_NAME));
             return ctx.ack();
         });
 
