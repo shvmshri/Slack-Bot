@@ -41,5 +41,3 @@ A Slack bot that provides real-time notifications about build jobs, allowing tea
 | **Slack Integration** | Bolt Framework | Slack app development |
 | **CI/CD Integration** | Jenkins API | Retrieve build job information |
 | **Language** | Java | Core application logic |
-
-## 🏗️ Architecture
